@@ -98,7 +98,7 @@ namespace OpenSage.Loaders {
 		 * in the (TODO) model loader
 		 * */
 		public bool update(){
-			TextureRenderer.RenderTexture(texture);
+			TextureRenderer.RenderTexture(texture, true);
 			return true;
 		}
 	}

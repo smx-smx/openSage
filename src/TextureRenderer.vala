@@ -1,15 +1,17 @@
 using GL;
 
 public class TextureRenderer {
-	public static void RenderTexture(GLuint texture){
+	public static void RenderTexture(GLuint texture, bool flip = false){
 		// Bind the texture
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glEnable(GL_TEXTURE_2D);
 		
-		// Rotate upside down BMP with OpenGL instead of FreeImage (faster)
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-		glScalef(-1.0f, -1.0f, 1.0f); //flip X and Y axis
+		if(flip){
+			// Rotate upside down BMP with OpenGL instead of FreeImage (faster)
+			glMatrixMode(GL_TEXTURE);
+			glLoadIdentity();
+			glScalef(-1.0f, -1.0f, 1.0f); //flip X and Y axis
+		}
 		
 		// Draw a textured cube across the viewport
 		glMatrixMode(GL_MODELVIEW);
