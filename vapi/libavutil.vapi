@@ -40,6 +40,30 @@ namespace Av.Util
         [CCode (cname = "AVERROR")]
         public static Error from_posix (int errno);
 
+		[CCode (cname = "av_strerror")]
+		private static int _to_string(int errnum, string errbuf, size_t errbuf_size);
+        
+        [CCode (cname = "av_make_error_string")]
+        private static string make_error_string(string errbuf, size_t errbuf_size, int errnum);
+
+        [CCode (cname = "AV_ERROR_MAX_STRING_SIZE")]
+        public const size_t max_error_string_size;
+
+        [CCode (cname = "av_err2str")]
+        public static unowned string err2str(int errnum);
+
+        // TODO: fix these below
+        public static string strerror(int errnum){
+            string errbuf = string.nfill(128, 0x00);
+            _to_string(errnum, errbuf, errbuf.length);
+            return errbuf;
+        }
+        
+        public static string to_string(int errnum){
+            string errbuf = string.nfill(max_error_string_size, 0x00);
+            return make_error_string(errbuf, max_error_string_size, errnum);
+        }
+
         [CCode (cname = "AVUNERROR")]
         public int to_posix ();
     }
@@ -645,6 +669,15 @@ namespace Av.Util
 
         [CCode (cname = "av_frame_side_data_name")]
         public unowned string to_string ();
+    }
+
+    [Compact, CCode(cprefix = "av_image_", cheader_filename = "libavutil/imgutils.h")]
+    public class Image {
+        //TODO: Missing functions
+        [CCode(cname = "av_image_fill_arrays")]
+        public static int fill_arrays(uint8 *dst_data, int *dst_linesize, uint8 *src, PixelFormat pix_fmt, int width, int height, int align);
+        public static int get_linesize(PixelFormat pix_fmt, int width, int plane);
+        public static int get_buffer_size(PixelFormat pix_fmt, int width, int height, int align);
     }
 
     [Compact, CCode (cname = "AVFrame", free_function = "av_frame_free", free_function_address_of = true, cheader_filename = "libavutil/frame.h")]

@@ -16,24 +16,28 @@ namespace OpenSage {
 			this.State = GameState.NONE;
 		}
 		
-		public void load(string url){			
+		public bool load(string url){			
 			switch(this.State){
 				case GameState.SPLASH:
-					((ImageLoader *)this.stageHandle)->load(url);
-					break;
+					return ((ImageLoader *)this.stageHandle)->load(url);
 				case GameState.CINEMATIC:
+					return ((VideoLoader *)this.stageHandle)->load(url);
 				case GameState.LOADING:
-					break;
+				default:
+					return false;
 			}
 		}
 		
 		public void FreeStage(){
 			switch(this.State){
 				case GameState.SPLASH:
-					ImageLoader *ldr = (void *)new ImageLoader();
+					ImageLoader *ldr = (ImageLoader *)this.stageHandle;
 					delete ldr;
 					break;
 				case GameState.CINEMATIC:
+					VideoLoader *ldr = (VideoLoader *)this.stageHandle;
+					delete ldr;
+					break;
 				case GameState.LOADING:
 					break;
 			}
@@ -41,15 +45,18 @@ namespace OpenSage {
 		
 		public void SwitchState(GameState state){
 			FreeStage();
-			switch(this.State){
-				case GameState.NONE:
-					this.State = GameState.SPLASH;
+			switch(state){
+				case GameState.SPLASH:
 					this.stageHandle = (void *)new ImageLoader();
 					break;
 				case GameState.CINEMATIC:
+					this.stageHandle = (void *)new VideoLoader();
+					break;
 				case GameState.LOADING:
 					break;
 			}
+			
+			this.State = state;
 		}
 		
 		public bool update(){
@@ -57,6 +64,7 @@ namespace OpenSage {
 				case GameState.SPLASH:
 					return ((ImageLoader *)this.stageHandle)->update();
 				case GameState.CINEMATIC:
+					return ((VideoLoader *)this.stageHandle)->update();
 				case GameState.LOADING:
 				default:
 					return false;
