@@ -1,17 +1,40 @@
 using GL;
 
+public enum TextureFlipMode {
+	FLIP_BMP = 0,
+	FLIP_VIDEO = 1
+}
+
 public class TextureRenderer {
-	public static void RenderTexture(GLuint texture, bool flip = false){
+	public static void RenderTexture(GLuint texture, TextureFlipMode? flipMode = null){
 		// Bind the texture
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glEnable(GL_TEXTURE_2D);
 		
-		if(flip){
-			// Rotate upside down BMP with OpenGL instead of FreeImage (faster)
-			glMatrixMode(GL_TEXTURE);
-			glLoadIdentity();
-			glScalef(-1.0f, -1.0f, 1.0f); //flip X and Y axis
+		if(flipMode == null){
+			return;
 		}
+
+		// Rotate upside down BMP with OpenGL instead of FreeImage (faster)
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+
+		float f_x, f_y, f_z;
+		f_x = f_y = f_z = 1.0f;
+
+		switch(flipMode){
+			case TextureFlipMode.FLIP_BMP:
+				f_y = f_x = -1.0f;
+				break;
+			case TextureFlipMode.FLIP_VIDEO:
+				f_x = -1.0f;
+				break;
+			default:
+				break;
+		}
+			
+		glScalef(f_x, f_y, f_z);
+
 		
 		// Draw a textured cube across the viewport
 		glMatrixMode(GL_MODELVIEW);

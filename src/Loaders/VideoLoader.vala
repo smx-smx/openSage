@@ -3,6 +3,7 @@ using Av.Format;
 using Sw.Scale;
 using Av.Util;
 
+using GLib;
 using GL;
 
 namespace OpenSage.Loaders {
@@ -17,12 +18,20 @@ namespace OpenSage.Loaders {
 			
 			private Frame frame_rgb;
 			private uint8[] m_buf;
+						
+			private int64 last_stamp = 0;
+					
+			//unowned Thread<bool> frame_provider;
 			
-			private int64 last_frame_time;
-			
+			/*
+			 * TODO: Switch to threads
+			 * */
 			public VideoLoader(){
 				Av.Codec.register_all();
 				Av.Format.register_all();
+				
+				// Create and start the thread
+				//frame_provider = new Thread(this.update);
 			}
 			
 			~VideoLoader(){
@@ -40,6 +49,7 @@ namespace OpenSage.Loaders {
 					return false;
 				}
 				
+				// Find the first video and audio streams
 				for(int i=0; i<format_ctx.streams.length; i++){
 					if(video_index >= 0 && audio_index >= 0)
 						break;
@@ -75,6 +85,7 @@ namespace OpenSage.Loaders {
 					return false;
 				}
 				
+				// Holds the video frame converted ro RGB
 				frame_rgb = new Frame();
 							
 				frameSize = Image.get_buffer_size(PixelFormat.RGB24, codec_ctx.width, codec_ctx.height, 8);
@@ -102,93 +113,103 @@ namespace OpenSage.Loaders {
 					null
 				);
 				
-				GLib.DateTime now = new GLib.DateTime.now_local();
-				var sec = now.to_unix();
-				var msec = (sec * 1000) + (now.get_microsecond() / 1000);
-				last_frame_time = msec;
-				
 				return true;
 				
 			}
-				
+			
+			/*
+			 * TODO: switch to int for error reporting (negative values)
+			 * */
 			public bool update(){
-				/*double fps = codec_ctx.time_base.q2d();
-				stdout.printf("FPS: %.2f\n", fps);
-				uint frameLength = (uint)(1 / fps * 1000);
-				stdout.printf("FrameLength: %u\n", frameLength);*/
-
 				Av.Codec.Packet packet = new Av.Codec.Packet();
 				
-				if(format_ctx.read_frame(packet) >= 0){
-					stdout.printf("Got Frame\n");
-					int ret = codec_ctx.send_packet(packet);
-					if(ret < 0){
-						if(ret == Av.Util.Error.EOF)
-							return true;
-						return false;
-					}
-					
-					if(packet.stream_index != video_index){
-						return true;
-					}
-					
-					Frame frame = new Frame();
-					ret = codec_ctx.receive_frame(frame);
-					if(ret < 0){
-						if(ret == Av.Util.Error.EOF)
-							return true;
-						return false;
-					}
-					
-					scale_ctx.scale(
-						frame.data,
-						frame.linesize,
-						0,
-						codec_ctx.height,
-						frame_rgb.data,
-						frame_rgb.linesize
-					);
-					
-					GLuint[] texture = new GLuint[1]{ 0 };
-					glGenTextures(1, texture);
-					glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-					glTexImage2D(
-						GL_TEXTURE_2D,              //Always GL_TEXTURE_2D
-						0,
-						GL_RGB,                              //Format OpenGL uses for image
-						codec_ctx.width, codec_ctx.height, //Width and height
-						0,                                   //The border of the image
-						GL_RGB,                              
-						GL_UNSIGNED_BYTE,                    //GL_UNSIGNED_BYTE, because pixels are 
-						//stored as unsigned numbers
-						(GLvoid[])frame_rgb.data[0]				//The actual pixel data
-					);   
-									
-					GLenum minification = GL_LINEAR;
-					GLenum magnification = GL_LINEAR;
-					
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)minification);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)magnification);
-					
-					if (
-						minification == GL_LINEAR_MIPMAP_LINEAR   ||
-						minification == GL_LINEAR_MIPMAP_NEAREST  ||
-						minification == GL_NEAREST_MIPMAP_LINEAR  ||
-						minification == GL_NEAREST_MIPMAP_NEAREST
-					){
-						glGenerateMipmap(GL_TEXTURE_2D);
-					}
-					
-					TextureRenderer.RenderTexture(texture[0]);
-					Posix.sleep(1);
-					//last_frame_time += frameLength;
-					//Posix.usleep((uint)frameLength * 1000);
-					
-					glDeleteTextures(1, texture);
-					packet.unref();
-					
+				if(format_ctx.read_frame(packet) < 0){
+					// we didn't get any frame
+					return false;
 				}
+				
+				//stdout.printf("Got Frame\n");
+				int ret = codec_ctx.send_packet(packet);
+				if(ret < 0){
+					if(ret == Av.Util.Error.EOF)
+						return true;
+					return false;
+				}
+				
+				if(packet.stream_index != video_index){
+					// not a frame we're interested in
+					return false;
+				}
+				
+				Frame frame = new Frame();
+				ret = codec_ctx.receive_frame(frame);
+				if(ret < 0){
+					return false;
+					/*
+					if(ret == Av.Util.Error.EOF)
+						return true;
+					return false;
+					*/
+				}
+									
+				scale_ctx.scale(
+					frame.data,
+					frame.linesize,
+					0,
+					codec_ctx.height,
+					frame_rgb.data,
+					frame_rgb.linesize
+				);
+				
+				GLuint[] texture = new GLuint[1]{ 0 };
+				glGenTextures(1, texture);
+				glBindTexture(GL_TEXTURE_2D, texture[0]);
+
+				glTexImage2D(
+					GL_TEXTURE_2D,              //Always GL_TEXTURE_2D
+					0,
+					GL_RGB,                              //Format OpenGL uses for image
+					codec_ctx.width, codec_ctx.height, //Width and height
+					0,                                   //The border of the image
+					GL_RGB,                              
+					GL_UNSIGNED_BYTE,                    //GL_UNSIGNED_BYTE, because pixels are 
+					//stored as unsigned numbers
+					(GLvoid[])frame_rgb.data[0]				//The actual pixel data
+				);   
+								
+				GLenum minification = GL_LINEAR;
+				GLenum magnification = GL_LINEAR;
+				
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)minification);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)magnification);
+				
+				if (
+					minification == GL_LINEAR_MIPMAP_LINEAR   ||
+					minification == GL_LINEAR_MIPMAP_NEAREST  ||
+					minification == GL_NEAREST_MIPMAP_LINEAR  ||
+					minification == GL_NEAREST_MIPMAP_NEAREST
+				){
+					glGenerateMipmap(GL_TEXTURE_2D);
+				}
+				
+				TextureRenderer.RenderTexture(texture[0], TextureFlipMode.FLIP_VIDEO);
+
+				double frameRate = format_ctx.streams[video_index].avg_frame_rate.q2d();
+				double frameDuration = 1000.0f * frameRate;
+				int64 delay = new DateTime.now_local().get_microsecond() - last_stamp;
+				
+				//stdout.printf("delay %u, frameDuration %.2f\n", (uint)delay, frameDuration);
+				if(frameDuration > delay){
+					uint delta = (uint)(frameDuration - delay);
+					//stdout.printf("Delta: %u\n", (uint)delta);
+					Posix.usleep(delta);
+				}
+				
+				last_stamp = new DateTime.now_local().get_microsecond();
+				stdout.flush();
+
+				glDeleteTextures(1, texture);
+				packet.unref();
 				
 				return true;
 			}

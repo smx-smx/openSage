@@ -63,13 +63,18 @@ namespace OpenSage {
 			while(!this.window.should_close){
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
-				handler.update();
+				if(!handler.update())
+					continue;
+				
 				this.window.swap_buffers();
 				
 				GLFW.poll_events();
 				
 				if(handler.State == GameState.SPLASH){
+					stdout.printf("Showing the splash for a few seconds...\n");
 					//Posix.sleep(2);
+					
+					stdout.printf("Playing intro video...\n");
 					handler.SwitchState(GameState.CINEMATIC);
 					result = handler.load(settings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
 					if(!result){
