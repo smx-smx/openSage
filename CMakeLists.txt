@@ -13,10 +13,13 @@ include(UseVala)
 find_package(Vala REQUIRED)
 find_package(OpenGL REQUIRED)
 
+find_package (Threads REQUIRED)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB2 REQUIRED glib-2.0>=2.38)
 pkg_check_modules(GIO2 REQUIRED gio-2.0)
 pkg_check_modules(GOBJECT2 REQUIRED gobject-2.0>=2.38)
+pkg_check_modules(GEE REQUIRED gee-0.8)
 pkg_check_modules(GLFW3 REQUIRED glfw3)
 pkg_check_modules(GLEW REQUIRED glew)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
@@ -39,6 +42,7 @@ vala_precompile(VALA_C
 PACKAGES
     gio-2.0
     posix
+    gee-0.8
 OPTIONS
     --thread
 CUSTOM_VAPIS
@@ -53,6 +57,7 @@ include_directories(
     ${GLIB2_INCLUDE_DIRS}
     ${GIO2_INCLUDE_DIRS}
     ${GOBJECT2_INCLUDE_DIRS}
+    ${GEE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${GLFW3_INCLUDE_DIRS}
@@ -66,6 +71,7 @@ link_directories(
     ${GLIB2_LIBRARY_DIRS}
     ${GIO2_LIBRARY_DIRS}
     ${GOBJECT2_LIBRARY_DIRS}
+    ${GEE_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
     ${GLFW3_LIBRARY_DIRS}
     ${SWSCALE_LIBRARY_DIRS}
@@ -88,10 +94,15 @@ add_custom_command(
         COMMAND sh -c 'cmd //C php ${CMAKE_SOURCE_DIR}/cmake/glewFirst.php ${VALA_C}'
     )
 
+add_subdirectory(native)
+include_directories(native/headers)
+include_directories(native/libmfile)
+
 target_link_libraries(openSage
     ${GLIB2_LIBRARIES}
     ${GIO2_LIBRARIES}
     ${GOBJECT2_LIBRARIES}
+    ${GEE_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLFW3_LIBRARIES}
@@ -100,4 +111,6 @@ target_link_libraries(openSage
     ${AVFORMAT_LIBRARIES}
     ${AVUTIL_LIBRARIES}
     ${SWSCALE_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    mfile
 )

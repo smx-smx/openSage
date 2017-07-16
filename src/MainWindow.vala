@@ -1,6 +1,8 @@
 using GL;
 using GLU;
 
+using OpenSage.Loaders;
+
 namespace OpenSage {
 	public class MainWindow {
 		private GLFW.Window window;
