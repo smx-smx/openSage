@@ -38,7 +38,11 @@ public errordomain CoreError {
 	/**
 	 * Indicates an index buffer object initialization error.
 	 */
-	IBO_INIT
+    IBO_INIT,
+    /**
+	 * Indicates a frame buffer object initialization error.
+	 */
+    FBO_INIT
 }
 
 }
