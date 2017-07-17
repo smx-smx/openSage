@@ -1,10 +1,12 @@
 using GL;
 using GLU;
+using GLEW;
 
 using OpenSage.Loaders;
-
 namespace OpenSage {
 	public class MainWindow {
+		GlewDummy *dummy;
+
 		private GLFW.Window window;
 		private EngineSettings settings;
 		

@@ -20,6 +20,11 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
+[Compact, CCode(cname = "void", cheader_filename = "GL/glew.h")]
+public class GlewDummy {
+    public GlewDummy(){}
+}
+
 [CCode (cprefix = "GLEW", gir_namespace = "GLEW", gir_version = "1.0", lower_case_cprefix = "glew_", cheader_filename="GL/glew.h")]
 namespace GLEW {
 	[CCode (cname = "glewInit")]

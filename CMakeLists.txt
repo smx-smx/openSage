@@ -79,21 +79,6 @@ link_directories(
 
 add_executable(openSage ${VALA_C})
 
-set(stamps_list "")
-foreach(vc ${VALA_C})
-    list(APPEND stamps_list ${vc}.stamp)
-    set_source_files_properties(
-        ${vc}
-        APPEND PROPERTIES OBJECT_DEPENDS ${vc}.stamp
-    )
-endforeach()
-
-add_custom_command(
-    OUTPUT ${stamps_list}
-    DEPENDS ${VALA_C}
-        COMMAND sh -c 'cmd //C php ${CMAKE_SOURCE_DIR}/cmake/glewFirst.php ${VALA_C}'
-    )
-
 add_subdirectory(native)
 include_directories(native/headers)
 include_directories(native/libmfile)
