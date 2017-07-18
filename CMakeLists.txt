@@ -20,7 +20,7 @@ pkg_check_modules(GLIB2 REQUIRED glib-2.0>=2.38)
 pkg_check_modules(GIO2 REQUIRED gio-2.0)
 pkg_check_modules(GOBJECT2 REQUIRED gobject-2.0>=2.38)
 pkg_check_modules(GEE REQUIRED gee-0.8)
-pkg_check_modules(GLFW3 REQUIRED glfw3)
+pkg_check_modules(SDL2 REQUIRED sdl2)
 pkg_check_modules(GLEW REQUIRED glew)
 pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)
@@ -59,8 +59,8 @@ include_directories(
     ${GOBJECT2_INCLUDE_DIRS}
     ${GEE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
+    ${SDL2_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
-    ${GLFW3_INCLUDE_DIRS}
     ${AVCODEC_INCLUDE_DIRS}
     ${AVFORMAT_INCLUDE_DIRS}
     ${AVUTIL_INCLUDE_DIRS}
@@ -73,7 +73,7 @@ link_directories(
     ${GOBJECT2_LIBRARY_DIRS}
     ${GEE_LIBRARY_DIRS}
     ${GLEW_LIBRARY_DIRS}
-    ${GLFW3_LIBRARY_DIRS}
+    ${SDL2_LIBRARY_DIRS}
     ${SWSCALE_LIBRARY_DIRS}
 )
 
@@ -90,7 +90,7 @@ target_link_libraries(openSage
     ${GEE_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${OPENGL_LIBRARIES}
-    ${GLFW3_LIBRARIES}
+    ${SDL2_LIBRARIES}
     ${FREEIMAGE_LIBRARY}
     ${AVCODEC_LIBRARIES}
     ${AVFORMAT_LIBRARIES}

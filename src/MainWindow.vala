@@ -2,12 +2,16 @@ using GL;
 using GLU;
 using GLEW;
 
+using SDL;
+
 using OpenSage.Loaders;
 namespace OpenSage {
 	public class MainWindow {
 		GlewDummy *dummy;
 
-		private GLFW.Window window;
+		private Video.Window window;
+		private Video.GL.Context context;
+
 		private EngineSettings settings;
 		
 		private static void on_debug_message(
@@ -16,21 +20,34 @@ namespace OpenSage {
 		){
 			stdout.printf("[OPENGL] %s\n", message);
 		}
+
+		private void setAttributes(){
+			//TODO: Switch to OpenGL CORE
+		}
 		
 		private bool create(){
-			if(!GLFW.init()){
-				stderr.printf("glfwInit failed\n");
+			if(SDL.init(SDL.InitFlag.VIDEO) < 0){
+				stderr.printf("SDL VIDEO init failed\n");
 				return false;
 			}
-			GLFW.WindowHint.OPENGL_DEBUG_CONTEXT.set_bool(true);
-			this.window = new GLFW.Window(this.settings.ScreenWidth, this.settings.ScreenHeight, "openSage", null, null);
+			//GLFW.WindowHint.OPENGL_DEBUG_CONTEXT.set_bool(true);
+			this.window = new Video.Window(
+				"openSage",
+				Video.Window.POS_CENTERED,
+				Video.Window.POS_CENTERED,
+				this.settings.ScreenWidth,
+				this.settings.ScreenHeight,
+				Video.WindowFlags.OPENGL
+			);
 			
 			if(this.window == null){
 				stderr.printf("Cannot create GLFW Window\n");
 				return false;
 			}
-					
-			this.window.make_context_current();
+			
+			this.context = Video.GL.Context.create(this.window);
+			Video.GL.make_current(this.window, this.context);
+
 			// Init GLEW after GLFW
 			GLEW.glewInit();
 			
@@ -43,7 +60,7 @@ namespace OpenSage {
 		}
 
 		private void terminate(){
-			GLFW.terminate();
+			SDL.quit();
 		}
 
 		public MainWindow(EngineSettings settings){
@@ -55,25 +72,24 @@ namespace OpenSage {
 	
 		public void MainLoop(){
 			bool result;
-							
+			bool run = true;
+
 			Handler handler = new Handler();
 			handler.SwitchState(GameState.SPLASH);
 			result = handler.load(settings.RootDir + "/Install_Final.bmp");
 			if(!result){
 				stderr.printf("Failed to open BMP\n");
-				this.window.should_close = true;
+				run = false;
 			}
-			
-			while(!this.window.should_close){
+
+			while(run){
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
 				if(!handler.update())
 					continue;
 				
-				this.window.swap_buffers();
-				
-				GLFW.poll_events();
-				
+				Video.GL.swap_window(this.window);
+							
 				if(handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
 					//Posix.sleep(2);
@@ -83,7 +99,7 @@ namespace OpenSage {
 					result = handler.load(settings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
 					if(!result){
 						stderr.printf("Failed to load EA_LOGO.bik\n");
-						this.window.should_close = true;
+						run = false;
 					}
 				}
 			}
