@@ -154,8 +154,8 @@ namespace OpenSage {
 					run = false;
 				}
 				if(ev.type == SDL.EventType.KEYDOWN){
-					stdout.printf("%s PRESSED!\n", ev.key.keysym.scancode.get_name());
-					if(ev.key.keysym.scancode == Input.Scancode.ESCAPE)
+					stdout.printf("%s PRESSED!\n", ev.key.keysym.sym.get_name());
+					if(ev.key.keysym.sym == Input.Keycode.ESCAPE)
 						run = false;
 				}
 				
