@@ -33,7 +33,24 @@ namespace OpenSage.Loaders {
 		
 		private int audio_index;
 		
+		private Object clock_lock = null;
+		private int64 last_stamp = 0;
+				
+		public int64 audio_clock {
+			get {
+				lock (clock_lock){
+					return last_stamp;
+				}
+			}
+			set {
+				lock (clock_lock){
+					last_stamp = value;
+				}
+			}
+		}
+		
 		private bool should_run = true;
+		
 		
 		public AudioFrameConsumer(
 			Cancellable cts,
@@ -129,18 +146,33 @@ namespace OpenSage.Loaders {
 				Audio.MixFlags.MAXVOLUME
 			);
 			
-			stdout.printf("SDL Mixed %u (buf max: %u)\n", length, dst_buf.length);
+			//stdout.printf("SDL Mixed %u (buf max: %u)\n", length, dst_buf.length);
 			
 			audio_cursor += length;
 			remaining_length -= length;
 			
-			stdout.printf("AudioBuf remaining: %u\n", remaining_length);
+			//stdout.printf("AudioBuf remaining: %u\n", remaining_length);
 		}
 		
 		public bool renderFrame(Frame *frame){
 			while(remaining_length > 0)
 				Posix.usleep(1);
 			
+			int64 pts = frame->best_effort_timestamp;
+			if(pts == NOPTS_VALUE){
+				stdout.printf("NO AUDIO PTS!!!\n");
+			}
+			Mathematics.rescale_q(
+				pts,
+				format_ctx.streams[audio_index].time_base,
+				TIME_BASE_Q
+			);
+			
+			/*if(pts > last_stamp){
+				uint delta = (uint)(pts - last_stamp) * 1000;
+				Posix.usleep(delta);
+			}*/
+			audio_clock = pts;
 			
 			Av.Util.freep(&audio_buf);
 			if(Sample.Samples.alloc(
@@ -173,7 +205,7 @@ namespace OpenSage.Loaders {
 			audio_buf.length = buf_length;
 			remaining_length = buf_length;
 
-			stdout.printf("New buf length: %u\n", remaining_length);				
+			//stdout.printf("New buf length: %u\n", remaining_length);				
 			return true;
 		}
 		
@@ -184,7 +216,7 @@ namespace OpenSage.Loaders {
 				if(frame == null)
 					break;
 
-				stdout.printf("Audio Frame @ %p\n", frame);
+				//stdout.printf("Audio Frame @ %p\n", frame);
 				renderFrame(frame);
 				delete frame;
 			}
@@ -192,7 +224,9 @@ namespace OpenSage.Loaders {
 		}
 	}
 	
-	private class VideoFrameConsumer : FrameProvider {	
+	private class VideoFrameConsumer : FrameProvider {
+		private unowned VideoPlayer player;
+		
 		private Sw.Scale.Context? scale_ctx;			// Video Scaler
 		private unowned Av.Format.Context format_ctx;
 		private unowned Av.Codec.Context codec_ctx;
@@ -207,18 +241,33 @@ namespace OpenSage.Loaders {
 		
 		private int video_index;
 		
-		// Video timestamp (for FPS/SampleRate syncronization)
+		private Object clock_lock = null;
 		private int64 last_stamp = 0;
+				
+		public int64 video_clock {
+			get {
+				lock (clock_lock){
+					return last_stamp;
+				}
+			}
+			set {
+				lock (clock_lock){
+					last_stamp = value;
+				}
+			}
+		}
 		
 		private bool should_run = true;
 		
 		public VideoFrameConsumer(
+			VideoPlayer player,
 			Cancellable cts,
 			Av.Format.Context format_ctx,
 			Av.Codec.Context codec_ctx,
 			int video_index,
 			AsyncQueue<Frame?> queue
 		){
+			this.player = player;
 			this.cts = cts;
 			this.format_ctx = format_ctx;
 			this.codec_ctx = codec_ctx;
@@ -284,19 +333,35 @@ namespace OpenSage.Loaders {
 				codec_ctx.width, codec_ctx.height,
 				m_buf.copy()
 			);
-
-			double frameRate = format_ctx.streams[video_index].avg_frame_rate.q2d();
-			double frameDuration = 1000.0f * frameRate;
-			int64 delay = new DateTime.now_local().get_microsecond() - last_stamp;
+					
+			int64 pts = frame->best_effort_timestamp;
+			if(pts == NOPTS_VALUE){
+				stdout.printf("NO VIDEO PTS!!!\n");
+			}
+			Mathematics.rescale_q(
+				pts,
+				format_ctx.streams[video_index].time_base,
+				TIME_BASE_Q
+			);
 			
+							uint sync_delta = 0;
+
 			//stdout.printf("delay %u, frameDuration %.2f\n", (uint)delay, frameDuration);
-			if(frameDuration > delay){
-				uint delta = (uint)(frameDuration - delay);
-				//stdout.printf("Delta: %u\n", (uint)delta);
+			if(pts > last_stamp){
+							
+				int64 audio_clock = player.audio_clock;
+				
+				// If audio is ahead of us, speed up the video (sleep less)
+				if(player.audio_clock > last_stamp){
+					sync_delta = (uint)(audio_clock - last_stamp);
+				}
+				
+				uint delta = (uint)((pts - last_stamp) * 1000) - sync_delta;
 				Posix.usleep(delta);
 			}
+			last_stamp = pts;
 			
-			last_stamp = new DateTime.now_local().get_microsecond();
+			stdout.printf("Sync delta: %u\n", sync_delta);
 			return true;
 		}
 		
@@ -306,7 +371,7 @@ namespace OpenSage.Loaders {
 				if(frame == null)
 					break;
 
-				stdout.printf("Video Frame @ %p\n", frame);
+				//stdout.printf("Video Frame @ %p\n", frame);
 				renderFrame(frame);
 				delete frame;
 			}
@@ -327,6 +392,31 @@ namespace OpenSage.Loaders {
 		
 		private int video_index;
 		private int audio_index;
+		
+		private VideoFrameConsumer vid_task;
+		private AudioFrameConsumer aud_task;
+		
+		// Producer Thread (this class)	
+		private GLib.Thread<void *> playerThread;
+		// Consumer Threads
+		private GLib.Thread<void *> videoThread;
+		private GLib.Thread<void *> audioThread;
+		
+		private Cancellable player_cts = new Cancellable();
+		private Cancellable video_cts = new Cancellable();
+		private Cancellable audio_cts = new Cancellable();
+		
+		public int64 audio_clock {
+			get {
+				return aud_task.audio_clock;
+			}
+		}
+		
+		public int64 video_clock {
+			get {
+				return vid_task.video_clock;
+			}
+		}
 		
 		private bool should_run = true;
 		
@@ -350,6 +440,36 @@ namespace OpenSage.Loaders {
 			this.audioFrameQ = audioFrameQ;
 			this.audio_codec_ctx = audio_codec_ctx;
 			this.audio_index = audio_index;
+		}
+
+		public bool play(VideoLoader *loader){
+			playerThread = new GLib.Thread<void*>(null, this.run);
+			
+			// Video frame consumer
+			vid_task = new VideoFrameConsumer(
+				this,
+				video_cts,
+				format_ctx,
+				video_codec_ctx,
+				video_index,
+				videoFrameQ
+			);
+			
+			/* chain events */
+			Handler.ChainEvents(vid_task, loader);
+			videoThread = new GLib.Thread<void *>(null, vid_task.run);
+			
+			// Audio frame consumer
+			aud_task = new AudioFrameConsumer(
+				audio_cts,
+				format_ctx,
+				audio_codec_ctx,
+				audio_index,
+				audioFrameQ
+			);
+			audioThread = new GLib.Thread<void *>(null, aud_task.run);
+			
+			return true;
 		}
 
 		private bool processAudioPacket(Av.Codec.Packet packet){		
@@ -427,6 +547,12 @@ namespace OpenSage.Loaders {
 				processPacket(packet);
 			}
 			
+			// Consume enqueued packets (TODO: needs Cond)
+			while(videoFrameQ.length() > 0)
+				Posix.usleep(1);
+			while(audioFrameQ.length() > 0)
+				Posix.usleep(1);
+			
 			return null;
 		}
 	}
@@ -442,14 +568,6 @@ namespace OpenSage.Loaders {
 			// Stream indexes
 			private int video_index = -1;
 			private int audio_index = -1;
-			
-			private GLib.Thread<void *> playerThread;
-			private GLib.Thread<void *> videoThread;
-			private GLib.Thread<void *> audioThread;
-		
-			private Cancellable player_cts = new Cancellable();
-			private Cancellable video_cts = new Cancellable();
-			private Cancellable audio_cts = new Cancellable();
 
 			public VideoLoader(){
 				Av.Codec.register_all();
@@ -545,31 +663,7 @@ namespace OpenSage.Loaders {
 					audio_codec_ctx,
 					audio_index
 				);
-				playerThread = new GLib.Thread<void*>(null, player.run);
-				
-				// Video frame consumer
-				VideoFrameConsumer videoRenderer = new VideoFrameConsumer(
-					video_cts,
-					format_ctx,
-					video_codec_ctx,
-					video_index,
-					videoFrameQ
-				);
-				
-				/* chain events */
-				Handler.ChainEvents(videoRenderer, this);
-				videoThread = new GLib.Thread<void *>(null, videoRenderer.run);
-				
-				// Audio frame consumer
-				AudioFrameConsumer audioPlayer = new AudioFrameConsumer(
-					audio_cts,
-					format_ctx,
-					audio_codec_ctx,
-					audio_index,
-					audioFrameQ
-				);
-				audioThread = new GLib.Thread<void *>(null, audioPlayer.run);
-
+				player.play(this);
 				return true;
 				
 			}

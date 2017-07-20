@@ -99,6 +99,7 @@ namespace Av.Format
         public Codec.Discard            discard;
         public Util.Rational            sample_aspect_ratio;
         public Util.Dictionary          metadata;
+        public Util.Rational            r_frame_rate;
         public Util.Rational            avg_frame_rate;
         public Codec.Packet             attached_pic;
         [CCode (array_length_cname = "nb_side_data")]

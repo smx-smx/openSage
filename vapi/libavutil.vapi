@@ -1,5 +1,8 @@
 namespace Av.Util
 {
+    [CCode (cname = "AV_NOPTS_VALUE")]
+    public const int64 NOPTS_VALUE;
+
     [CCode (cname = "AV_TIME_BASE")]
     public const int64 TIME_BASE;
 
