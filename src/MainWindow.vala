@@ -115,7 +115,7 @@ namespace OpenSage {
 			
 			handler.update(); // Show Splash Screen
 			
-			while(run){
+			while(run){			
 				/* Do we have any texture to render? */
 				Texture? texture = TextureQueue.try_pop();
 				if(texture != null){
@@ -141,6 +141,10 @@ namespace OpenSage {
 						run = false;
 					}
 				}
+				
+				SDL.Event ev;
+				SDL.Event.poll(out ev);
+				
 				stdout.flush();
 			}
 			
