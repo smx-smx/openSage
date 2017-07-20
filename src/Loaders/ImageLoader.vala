@@ -2,7 +2,7 @@ using GL;
 using FreeImage;
 
 namespace OpenSage.Loaders {
-	public class ImageLoader {
+	public class ImageLoader : FrameProvider {
 		private static GLuint LoadImage(string imagePath){
 			GLuint[] texture = new GLuint[1]{ 0 };
 			glGenTextures(1, texture);
@@ -98,7 +98,9 @@ namespace OpenSage.Loaders {
 		 * in the (TODO) model loader
 		 * */
 		public bool update(){
+			onFrameStart();
 			TextureRenderer.RenderTexture(texture, TextureFlipMode.FLIP_BMP);
+			onFrameEnd();
 			return true;
 		}
 	}

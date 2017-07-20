@@ -16,7 +16,6 @@ namespace OpenSage {
 		private EngineSettings settings;
 		
 		private AsyncQueue<Texture?> TextureQueue = new AsyncQueue<Texture?>();
-		
 		private GLEventHandler ghandler = new GLEventHandler();
 		
 		public MainWindow(EngineSettings settings){
@@ -30,12 +29,10 @@ namespace OpenSage {
 		}
 		
 		private void clear(){
-			stdout.printf("Clear\n");
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 		
 		private void swap(){
-			stdout.printf("Swap\n");
 			Video.GL.swap_window(this.window);
 		}
 		
@@ -111,6 +108,12 @@ namespace OpenSage {
 				stderr.printf("Failed to open BMP\n");
 				run = false;
 			}
+			
+			// Right now, this is for ImageLoader (which isn't multithreaded)
+			handler.onFrameStart.connect(clear);
+			handler.onFrameEnd.connect(swap);
+			
+			handler.update(); // Show Splash Screen
 			
 			while(run){
 				/* Do we have any texture to render? */

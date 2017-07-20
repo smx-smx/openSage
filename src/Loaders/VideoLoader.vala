@@ -120,11 +120,8 @@ namespace OpenSage.Loaders {
 		public void* run(){
 			while(should_run){
 				Frame *frame = queue.pop();
-				/*if(frame == null)
-					break;*/
 				stdout.printf("Frame @ %p\n", frame);
 				renderFrame(frame);
-				
 				delete frame;
 			}
 			return null;		
@@ -520,21 +517,6 @@ namespace OpenSage.Loaders {
 				remaining_length = buf_length;
 
 				stdout.printf("New buf length: %u\n", remaining_length);				
-				return true;
-			}
-
-			private bool update_video(Frame frame){
-				return true;
-			}
-
-			public bool play(){
-				return true;
-			}
-
-			/*
-			 * TODO: switch to int for error reporting (negative values)
-			 * */
-			public bool update(){
 				return true;
 			}
 	}

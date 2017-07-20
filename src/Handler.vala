@@ -61,6 +61,7 @@ namespace OpenSage {
 			switch(state){
 				case GameState.SPLASH:
 					this.stageHandle = (void *)new ImageLoader();
+					ChainEvents((FrameProvider *)this.stageHandle, this);
 					break;
 				case GameState.CINEMATIC:
 					this.stageHandle = (void *)new VideoLoader();
@@ -78,7 +79,6 @@ namespace OpenSage {
 				case GameState.SPLASH:
 					return ((ImageLoader *)this.stageHandle)->update();
 				case GameState.CINEMATIC:
-					return ((VideoLoader *)this.stageHandle)->update();
 				case GameState.LOADING:
 				default:
 					return false;
