@@ -13,8 +13,6 @@ include(UseVala)
 find_package(Vala REQUIRED)
 find_package(OpenGL REQUIRED)
 
-find_package (Threads REQUIRED)
-
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB2 REQUIRED glib-2.0>=2.38)
 pkg_check_modules(GIO2 REQUIRED gio-2.0)
@@ -100,6 +98,5 @@ target_link_libraries(openSage
     ${AVUTIL_LIBRARIES}
     ${SWSCALE_LIBRARIES}
     ${SWRESAMPLE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
     mfile
 )
