@@ -6,6 +6,9 @@ namespace Av.Util
     [CCode (cname = "AV_TIME_BASE_Q")]
     public const Rational TIME_BASE_Q;
 
+    [CCode (cname = "av_freep")]
+    public void freep(void *ptr);
+
     [CCode (cname = "int", cprefix = "AVERROR_", cheader_filename = "libavutil/error.h")]
     public enum Error
     {
@@ -323,6 +326,62 @@ namespace Av.Util
             [CCode (instance_pos = 3.1, cname = "av_samples_get_buffer_size")]
             public int get_buffer_size (out int? linesize, int nb_channels, int nb_samples, bool align);
         }
+
+        // TODO: Wrap uint8[][] to class instance
+        //[CCode (cname = "uint8_t *", free_function = "av_freep", free_function_address_of = true)]
+        [Compact]
+        public class Samples {
+            [CCode(cname = "av_samples_alloc")]
+            public static int alloc(
+                [CCode(array_length = false)]
+                out uint8[] audio_data,
+                out int linesize,
+                int nb_channels,
+                int nb_samples,
+                Sample.Format sample_fmt,
+                int align
+            );
+
+            [CCode(cname = "av_samples_alloc_array_and_samples")]
+            public static int alloc_array_and_samples(
+                out uint8 [][] audio_data,
+                out int linesize,
+                int nb_channels,
+                int nb_samples,
+                Sample.Format sample_fmt,
+                int align
+            );
+
+            [CCode(cname = "av_samples_fill_arrays")]
+            public static int fill_arrays(
+                out uint8[] audio_data,
+                out int linesize,
+                [CCode(array_length = false)] uint8[] buf,
+                int nb_channels,
+                int nb_samples,
+                Sample.Format sample_fmt,
+                int align
+            );
+
+            [CCode(cname = "av_samples_copy")]
+            public static int copy(
+                uint8[] audio_data,
+                [CCode(array_length = false)] uint8[] dst,
+                int dst_offset,
+                int src_offset,
+                int nb_samples,
+                int nb_channels,
+                Sample.Format sample_fmt
+            );
+
+            [CCode(cname = "av_samples_set_silence")]
+            public static int set_silence(
+                int offset,
+                int nb_samples,
+                int nb_channels,
+                Sample.Format sample_fmt
+            ); 
+        }
     }
 
     [CCode (cname = "enum AVPixelFormat", cprefix = "AV_PIX_FMT_", cheader_filename = "libavutil/pixfmt.h")]
@@ -564,7 +623,7 @@ namespace Av.Util
     namespace ChannelLayout
     {
         [Flags, CCode (cname = "gint64", cprefix = "AV_CH_F")]
-        public enum Flags
+        public enum Channel
         {
             FRONT_LEFT,
             FRONT_RIGHT,
@@ -591,11 +650,24 @@ namespace Av.Util
             SURROUND_DIRECT_LEFT,
             SURROUND_DIRECT_RIGHT,
             LOW_FREQUENCY_2,
-            LAYOUT_NATIVE
+            LAYOUT_NATIVE;
+
+            [CCode(cname = "av_channel_layout_extract_channel")]
+            public static Channel extract_channel(Layout layout, int index);
+
+            [CCode(cname = "av_get_channel_name")]
+            public unowned string get_name();
+
+            [CCode(cname = "av_get_channel_description")]
+            public unowned string get_description();
+
+            [CCode(cname = "av_get_standard_channel_layout")]
+            public int get_standard_layout(uint index, out Layout layout, out string name);
         }
 
         [CCode (cname = "gint64", cprefix = "AV_CH_LAYOUT_")]
-        public enum Mask
+        [Flags]
+        public enum Layout
         {
             MONO,
             STEREO,
@@ -624,7 +696,25 @@ namespace Av.Util
             7POINT1_WIDE_BACK,
             OCTAGONAL,
             HEXADECAGONAL,
-            STEREO_DOWNMIX
+            STEREO_DOWNMIX;
+
+            [CCode(cname = "av_get_channel_layout_nb_channels")]
+            public int nb_channels();
+
+            [CCode(cname = "av_get_channel_layout_string", instance_pos = -1)]
+            public void to_string(char[] buf, int nb_channels);
+
+            [CCode(cname = "av_get_channel_layout_channel_index")]
+            public int index_of_channel(uint64 channel);
+
+            [CCode(cname = "av_get_channel_layout")]
+            public static Layout get_channel_layout(string name);
+
+            [CCode(cname = "av_get_default_channel_layout")]
+            public static Layout get_default_channel_layout(int nb_channels);
+
+            [CCode(cname = "av_get_extended_channel_layout")]
+            public static int get_extended_channel_layout(string name, out Layout channel_layout, out int nb_channels);
         }
 
         [CCode (cname = "enum AVMatrixEncoding", cprefix = "AV_MATRIX_ENCODING_")]
@@ -749,7 +839,7 @@ namespace Av.Util
             set;
         }
 
-        public ChannelLayout.Mask channel_layout {
+        public ChannelLayout.Layout channel_layout {
             [CCode (cname = "av_frame_get_channel_layout")]
             get;
             [CCode (cname = "av_frame_set_channel_layout")]
@@ -915,7 +1005,7 @@ namespace Av.Util
         [CCode (cname = "av_opt_set_video_rate")]
         public static int set_video_rate (void *obj, string name, Rational val, SearchFlags search_flags = (SearchFlags)0);
         [CCode (cname = "av_opt_set_channel_layout")]
-        public static int set_channel_layout (void *obj, string name, ChannelLayout.Mask ch_layout, SearchFlags search_flags = (SearchFlags)0);
+        public static int set_channel_layout (void *obj, string name, ChannelLayout.Layout ch_layout, SearchFlags search_flags = (SearchFlags)0);
         [CCode (cname = "av_opt_set_dict_val")]
         public static int set_dict_val(void *obj, string name, Dictionary val, SearchFlags search_flags = (SearchFlags)0);
 
@@ -936,7 +1026,7 @@ namespace Av.Util
         [CCode (cname = "av_opt_get_video_rate")]
         public static int get_video_rate (void *obj, string name, SearchFlags search_flags, out Rational out_val);
         [CCode (cname = "av_opt_get_channel_layout")]
-        public static int get_channel_layout (void *obj, string name, SearchFlags search_flags, out ChannelLayout.Mask out_ch_layout);
+        public static int get_channel_layout (void *obj, string name, SearchFlags search_flags, out ChannelLayout.Layout out_ch_layout);
         [CCode (cname = "av_opt_get_dict_val")]
         public static int get_dict_val (void *obj, string name, SearchFlags search_flags, out Dictionary out_val);
     }

@@ -26,6 +26,7 @@ pkg_check_modules(AVCODEC REQUIRED libavcodec)
 pkg_check_modules(AVFORMAT REQUIRED libavformat)
 pkg_check_modules(AVUTIL REQUIRED libavutil)
 pkg_check_modules(SWSCALE REQUIRED libswscale)
+pkg_check_modules(SWRESAMPLE REQUIRED libswresample)
 
 find_library(FREEIMAGE_LIBRARY freeimage)
 
@@ -65,6 +66,7 @@ include_directories(
     ${AVFORMAT_INCLUDE_DIRS}
     ${AVUTIL_INCLUDE_DIRS}
     ${SWSCALE_INCLUDE_DIRS}
+    ${SWRESAMPLE_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -75,6 +77,7 @@ link_directories(
     ${GLEW_LIBRARY_DIRS}
     ${SDL2_LIBRARY_DIRS}
     ${SWSCALE_LIBRARY_DIRS}
+    ${SWRESAMPLE_LIBRARY_DIRS}
 )
 
 add_executable(openSage ${VALA_C})
@@ -96,6 +99,7 @@ target_link_libraries(openSage
     ${AVFORMAT_LIBRARIES}
     ${AVUTIL_LIBRARIES}
     ${SWSCALE_LIBRARIES}
+    ${SWRESAMPLE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     mfile
 )

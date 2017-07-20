@@ -1092,5 +1092,8 @@ namespace Av.Codec
 
         [CCode (cname = "avcodec_close")]
         public int close ();
+
+        [CCode (cname = "avcodec_decode_audio4")]
+        public int decode_audio(out Util.Frame frame, out int got_frame, Packet av_packet);
     }
 }

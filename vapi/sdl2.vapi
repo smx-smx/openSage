@@ -3814,7 +3814,7 @@ namespace SDL {
 			STOPPED, PLAYING, PAUSED
 		}// AudioStatus
 
-			[CCode (cname = "int", cprefix = "SDL_AUDIO_ALLOW_", cheader_filename = "SDL2/SDL_audio.h")]
+		[CCode (cname = "int", cprefix = "SDL_AUDIO_ALLOW_", cheader_filename = "SDL2/SDL_audio.h")]
 		public enum AllowFlags {
 			FREQUENCY_CHANGE,
 			FORMAT_CHANGE,
@@ -3823,7 +3823,7 @@ namespace SDL {
 		}// AudioAllowFlags
 
 		[CCode (cname = "SDL_AudioCallback", instance_pos = 0.1, has_target = true, delegate_target_pos = 0, cheader_filename = "SDL2/SDL_audio.h")]
-		public delegate void AudioFunc (uint8[] stream, int len);
+		public delegate void AudioFunc (uint8[] stream);
 
 		[CCode (cname = "SDL_AudioSpec", cheader_filename = "SDL2/SDL_audio.h")]
 		public struct AudioSpec {
@@ -3834,6 +3834,7 @@ namespace SDL {
 			public uint16 samples;
 			public uint16 padding;
 			public uint32 size;
+			public void *userdata;
 			[CCode (delegate_target_cname = "userdata")]
 			public unowned AudioFunc callback;
 		}// AudioSpec
@@ -3869,12 +3870,12 @@ namespace SDL {
 		[IntegerType (rank = 7)]
 		public struct AudioDevice : uint32 {
 			[CCode (cname = "SDL_OpenAudioDevice")]
-			public AudioDevice (string device_name, bool is_capture,
-								AudioSpec desired, AudioSpec obtained,
+			public AudioDevice (string? device_name, bool is_capture,
+								AudioSpec desired, AudioSpec? obtained,
 				int allowed_changes);
 
 			[CCode (cname = "SDL_PauseAudioDevice")]
-			public void pause (int pause_on);
+			public void pause (bool pause_on);
 
 			[CCode (cname = "SDL_GetAudioDeviceStatus")]
 			public AudioStatus get_status ();
@@ -3915,6 +3916,10 @@ namespace SDL {
 
 		}// AudioDeviceID
 
+		[CCode(cprefix = "SDL_MIX_")]
+		public enum MixFlags {
+			MAXVOLUME
+		}
 
 		[Version (since = "2.0.0")]
 		[CCode (cname = "SDL_GetNumAudioDrivers")]
@@ -3961,10 +3966,20 @@ namespace SDL {
 		public static void free (ref uint8 audio_buf);
 
 		[CCode (cname = "SDL_MixAudio")]
-		public static void mix (out uint8[] dst, uint8[] src, uint32 len, int volume);
+		public static void mix (
+			[CCode(array_length = false)] uint8[] dst,
+			[CCode(array_length = false)] uint8[] src,
+			uint32 len, int volume
+		);
 
 		[CCode (cname = "SDL_MixAudioFormat")]
-		public static void mix_device (out uint8[] dst, uint8[] src, AudioFormat format, uint32 len, int volume);
+		public static void mix_device (
+			[CCode(array_length = false)] uint8[] dst,
+			[CCode(array_length = false)] uint8[] src,
+			AudioFormat format,
+			uint32 len,
+			int volume
+		);
 
 		[Version (deprecated = true, replacement = "AudioDevice.do_lock")]
 		[CCode (cname = "SDL_LockAudio")]
