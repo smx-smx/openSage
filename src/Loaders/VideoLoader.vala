@@ -241,6 +241,9 @@ namespace OpenSage.Loaders {
 		
 		private unowned AsyncQueue<Frame?> queue;
 		
+		private const int MAXQ_SIZE = 15;
+		public AutoResetEvent slot_available = new AutoResetEvent(true);
+		
 		// Video frame size and frame buffer
 		private int frameSize;
 		private Frame frame_rgb;
@@ -375,6 +378,9 @@ namespace OpenSage.Loaders {
 		public void* run(){
 			while(should_run){
 				Frame *frame = queue.pop();
+				if(queue.length() < MAXQ_SIZE)
+					slot_available.set();
+
 				if(frame == null)
 					break;
 
@@ -520,10 +526,7 @@ namespace OpenSage.Loaders {
 			if(ret < 0)
 				return false;
 			
-			/* TODO: This should be a Cond */
-			while(videoFrameQ.length() > VIDEO_QUEUE_SIZE){
-				Posix.usleep(1);
-			}
+			vid_task.slot_available.wait();
 			videoFrameQ.push(frame);			
 			return true;
 		}
