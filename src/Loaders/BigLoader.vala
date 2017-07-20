@@ -59,6 +59,9 @@ namespace OpenSage.Loaders {
 		~BigLoader(){
 		}
 		
+		/*
+		 * Returns a R/O pointer to the specified file
+		 */
 		public unowned uint8[]? getFile(string name){
 			if(!bigFiles.has_key(name))
 				return null;
@@ -70,6 +73,7 @@ namespace OpenSage.Loaders {
 			stdout.printf("Big: Reading %u bytes at @%x\n", entry.length, entry.offset);
 			stdout.flush();
 			
+			//unowned because we want a R/O pointer to it
 			unowned uint8[] buf = (uint8[])(data + entry.offset);
 			buf.length = (int)entry.length;
 			return buf;
