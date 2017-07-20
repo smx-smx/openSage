@@ -15,6 +15,42 @@ namespace OpenSage {
 
 		private EngineSettings settings;
 		
+		private AsyncQueue<Texture?> TextureQueue = new AsyncQueue<Texture?>();
+		
+		private GLEventHandler ghandler = new GLEventHandler();
+		
+		public MainWindow(EngineSettings settings){
+			this.settings = settings;
+			if(!this.create()){
+				this.terminate();
+			}
+			
+			ghandler.onFrameStart.connect(clear);
+			ghandler.onFrameEnd.connect(swap);
+		}
+		
+		private void clear(){
+			stdout.printf("Clear\n");
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		}
+		
+		private void swap(){
+			stdout.printf("Swap\n");
+			Video.GL.swap_window(this.window);
+		}
+		
+		/* This function gets called by a thread that is sending a texture to us
+		 * We can't render here, so we enqueue this texture for the main thread
+		 * */
+		private void onTexture(int width, int height, void *data){			
+			Texture texture = Texture();
+			texture.width = width;
+			texture.height = height;
+			texture.data = data;
+			
+			TextureQueue.push(texture);
+		}
+		
 		private static void on_debug_message(
 			GLenum source, GLenum type, GLuint id,
 			GLenum severity, GLsizei length, string message, void* userParam
@@ -27,7 +63,7 @@ namespace OpenSage {
 		}
 		
 		private bool create(){
-			if(SDL.init(SDL.InitFlag.VIDEO | SDL.InitFlag.AUDIO) < 0){
+			if(SDL.init(SDL.InitFlag.VIDEO | SDL.InitFlag.AUDIO | SDL.InitFlag.TIMER) < 0){
 				stderr.printf("SDL init failed: %s\n", SDL.get_error());
 				return false;
 			}
@@ -63,13 +99,6 @@ namespace OpenSage {
 		private void terminate(){
 			SDL.quit();
 		}
-
-		public MainWindow(EngineSettings settings){
-			this.settings = settings;
-			if(!this.create()){
-				this.terminate();
-			}
-		}
 	
 		public void MainLoop(){
 			bool result;
@@ -84,12 +113,16 @@ namespace OpenSage {
 			}
 			
 			while(run){
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				/* Do we have any texture to render? */
+				Texture? texture = TextureQueue.try_pop();
+				if(texture != null){
+					ghandler.RenderTexture2D(texture.width, texture.height, texture.data);
+					delete texture.data; //done rendering, free the buffer
+				} else {
+					// Nothing to do, wait a bit
+					SDL.Timer.delay(1);
+				}
 				
-				if(!handler.update())
-					continue;
-				
-				Video.GL.swap_window(this.window);	
 				if(handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
 					//Posix.sleep(2);
@@ -97,11 +130,15 @@ namespace OpenSage {
 					stdout.printf("Playing intro video...\n");
 					handler.SwitchState(GameState.CINEMATIC);
 					result = handler.load(settings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
+					
+					handler.onTextureReady.connect(onTexture);
+					
 					if(!result){
 						stderr.printf("Failed to load EA_LOGO.bik\n");
 						run = false;
 					}
 				}
+				stdout.flush();
 			}
 			
 			this.terminate();

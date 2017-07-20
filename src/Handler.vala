@@ -8,12 +8,25 @@ namespace OpenSage {
 		LOADING = 3
 	}
 
-	public class Handler {
+	public class Handler : FrameProvider {
 		public GameState State {get; private set;}
 		private void *stageHandle;
-		
+				
 		public Handler(){
 			this.State = GameState.NONE;
+		}
+		
+		/* Chains events from one FrameProvider to another */
+		public static void ChainEvents(FrameProvider prv, FrameProvider dst){
+			prv.onFrameStart.connect(() => {
+				dst.onFrameStart();
+			});
+			prv.onFrameEnd.connect(() => {
+				dst.onFrameEnd();
+			});
+			prv.onTextureReady.connect((width, height, data) => {
+				dst.onTextureReady(width, height, data);
+			});
 		}
 		
 		public bool load(string url){			
@@ -51,6 +64,7 @@ namespace OpenSage {
 					break;
 				case GameState.CINEMATIC:
 					this.stageHandle = (void *)new VideoLoader();
+					ChainEvents((FrameProvider *)this.stageHandle, this);
 					break;
 				case GameState.LOADING:
 					break;
