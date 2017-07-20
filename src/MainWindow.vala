@@ -5,6 +5,7 @@ using GLEW;
 using SDL;
 
 using OpenSage.Loaders;
+
 namespace OpenSage {
 	public class MainWindow {
 		GlewDummy *dummy;
@@ -26,8 +27,8 @@ namespace OpenSage {
 		}
 		
 		private bool create(){
-			if(SDL.init(SDL.InitFlag.VIDEO) < 0){
-				stderr.printf("SDL VIDEO init failed\n");
+			if(SDL.init(SDL.InitFlag.VIDEO | SDL.InitFlag.AUDIO) < 0){
+				stderr.printf("SDL init failed: %s\n", SDL.get_error());
 				return false;
 			}
 			//GLFW.WindowHint.OPENGL_DEBUG_CONTEXT.set_bool(true);
@@ -41,10 +42,10 @@ namespace OpenSage {
 			);
 			
 			if(this.window == null){
-				stderr.printf("Cannot create GLFW Window\n");
+				stderr.printf("Cannot create SDL2 Window\n");
 				return false;
 			}
-			
+
 			this.context = Video.GL.Context.create(this.window);
 			Video.GL.make_current(this.window, this.context);
 
@@ -81,15 +82,14 @@ namespace OpenSage {
 				stderr.printf("Failed to open BMP\n");
 				run = false;
 			}
-
+			
 			while(run){
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
 				if(!handler.update())
 					continue;
 				
-				Video.GL.swap_window(this.window);
-							
+				Video.GL.swap_window(this.window);	
 				if(handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
 					//Posix.sleep(2);
