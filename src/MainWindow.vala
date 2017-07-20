@@ -60,7 +60,12 @@ namespace OpenSage {
 		}
 		
 		private bool create(){
-			if(SDL.init(SDL.InitFlag.VIDEO | SDL.InitFlag.AUDIO | SDL.InitFlag.TIMER) < 0){
+			if(SDL.init(
+				SDL.InitFlag.VIDEO |
+				SDL.InitFlag.AUDIO |
+				SDL.InitFlag.TIMER |
+				SDL.InitFlag.EVENTS
+			) < 0){
 				stderr.printf("SDL init failed: %s\n", SDL.get_error());
 				return false;
 			}
@@ -73,7 +78,7 @@ namespace OpenSage {
 				this.settings.ScreenHeight,
 				Video.WindowFlags.OPENGL
 			);
-			
+					
 			if(this.window == null){
 				stderr.printf("Cannot create SDL2 Window\n");
 				return false;
@@ -144,6 +149,15 @@ namespace OpenSage {
 				
 				SDL.Event ev;
 				SDL.Event.poll(out ev);
+				
+				if(ev.type == SDL.EventType.QUIT){
+					run = false;
+				}
+				if(ev.type == SDL.EventType.KEYDOWN){
+					stdout.printf("%s PRESSED!\n", ev.key.keysym.scancode.get_name());
+					if(ev.key.keysym.scancode == Input.Scancode.ESCAPE)
+						run = false;
+				}
 				
 				stdout.flush();
 			}

@@ -371,7 +371,7 @@ namespace OpenSage.Loaders {
 			}
 			last_stamp = pts;
 			
-			stdout.printf("Sync delta: %u\n", sync_delta);
+			//stdout.printf("Sync delta: %u\n", sync_delta);
 			return true;
 		}
 		
