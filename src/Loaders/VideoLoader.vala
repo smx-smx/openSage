@@ -8,12 +8,15 @@ using GLib;
 using GL;
 using SDL;
 
+using OpenSage.Support;
 namespace OpenSage.Loaders {
 	private class AudioFrameConsumer {
 		private unowned Av.Format.Context format_ctx;
 		private unowned Av.Codec.Context codec_ctx;
 		private unowned Sw.Resample.Context? swr_ctx;	// Audio Resampler
 		private Cancellable cts;
+		
+		private AutoResetEvent bufferFinished = new AutoResetEvent(false);
 		
 		private unowned AsyncQueue<Frame?> queue;
 		
@@ -128,6 +131,7 @@ namespace OpenSage.Loaders {
 		// SDL calls this function with the buffer we need to fill
 		private void fill_audio_buffer(uint8[] dst_buf){
 			if(remaining_length == 0){
+				bufferFinished.set();
 				return;
 			}
 
@@ -151,12 +155,15 @@ namespace OpenSage.Loaders {
 			audio_cursor += length;
 			remaining_length -= length;
 			
+			if(remaining_length == 0){
+				bufferFinished.set();
+			}
+			
 			//stdout.printf("AudioBuf remaining: %u\n", remaining_length);
 		}
 		
-		public bool renderFrame(Frame *frame){
-			while(remaining_length > 0)
-				Posix.usleep(1);
+		public bool renderFrame(Frame *frame){				
+			bufferFinished.wait();
 			
 			int64 pts = frame->best_effort_timestamp;
 			if(pts == NOPTS_VALUE){
@@ -344,7 +351,7 @@ namespace OpenSage.Loaders {
 				TIME_BASE_Q
 			);
 			
-							uint sync_delta = 0;
+			uint sync_delta = 0;
 
 			//stdout.printf("delay %u, frameDuration %.2f\n", (uint)delay, frameDuration);
 			if(pts > last_stamp){
@@ -385,6 +392,9 @@ namespace OpenSage.Loaders {
 		
 		private unowned AsyncQueue<Frame *> videoFrameQ;
 		private unowned AsyncQueue<Frame *> audioFrameQ;
+		
+		private AutoResetEvent videoQEmpty = new AutoResetEvent(true);
+		private AutoResetEvent audioQEmpty = new AutoResetEvent(true);
 		
 		private unowned Av.Format.Context format_ctx;
 		private unowned Av.Codec.Context video_codec_ctx;
@@ -547,12 +557,8 @@ namespace OpenSage.Loaders {
 				processPacket(packet);
 			}
 			
-			// Consume enqueued packets (TODO: needs Cond)
-			while(videoFrameQ.length() > 0)
-				Posix.usleep(1);
-			while(audioFrameQ.length() > 0)
-				Posix.usleep(1);
-			
+			videoQEmpty.wait();
+			audioQEmpty.wait();
 			return null;
 		}
 	}
