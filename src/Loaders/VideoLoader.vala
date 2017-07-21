@@ -488,46 +488,29 @@ namespace OpenSage.Loaders {
 			return true;
 		}
 
-		private bool processAudioPacket(Av.Codec.Packet packet){		
-			Frame *frame = new Frame();
-			
-			//stdout.printf("Audio Packet Size: %u\n", packet.size);
-			int ret = audio_codec_ctx.send_packet(packet);
-			if(ret < 0){
+		private bool processCodecPacket(
+			Av.Codec.Context codec_ctx,
+			Av.Codec.Packet packet,
+			AsyncQueue<Frame *>queue
+		){
+			//stdout.printf("Packet Size: %u\n", packet.size);
+			int ret = codec_ctx.send_packet(packet);
+			if(ret == Av.Util.Error.EOF || ret == Av.Util.Error.from_posix(Posix.EAGAIN))
+				return true;
+			else if(ret < 0) {
 				stdout.printf("Audio Packet Error: %s\n", Av.Util.Error.err2str(ret));
-				if(ret == Av.Util.Error.EOF){
-					return true;
-				}
 				return false;
 			}
 			
 			// Receive the decoded audio packet
-			ret = audio_codec_ctx.receive_frame(frame);
-			if(ret < 0)
-				return false;
-			
-			audioFrameQ.push(frame);		
-			return true;
-		}
-		
-		private bool processVideoPacket(Av.Codec.Packet packet){
-			Frame *frame = new Frame();
-			
-			int ret = video_codec_ctx.send_packet(packet);
-			if(ret < 0){
-				stdout.printf("Video Packet Error: %s\n", Av.Util.Error.err2str(ret));
-				if(ret == Av.Util.Error.EOF)
-					return true;
-				return false;
+			while(true){
+				Frame *frame = new Frame();
+				ret = codec_ctx.receive_frame(frame);
+				if(ret < 0 && ret != Av.Util.Error.EOF)
+					return false;
+				queue.push(frame);
 			}
 			
-			// Receive the decoded video packet
-			ret = video_codec_ctx.receive_frame(frame);
-			if(ret < 0)
-				return false;
-			
-			vid_task.slot_available.wait();
-			videoFrameQ.push(frame);			
 			return true;
 		}
 
@@ -541,9 +524,9 @@ namespace OpenSage.Loaders {
 			
 			bool result = false;
 			if(packet.stream_index == video_index){
-				return processVideoPacket(packet);
+				return processCodecPacket(video_codec_ctx, packet, videoFrameQ);
 			} else if(packet.stream_index == audio_index){
-				return processAudioPacket(packet);
+				return processCodecPacket(audio_codec_ctx, packet, audioFrameQ);
 			}
 
 			packet.unref();
@@ -553,9 +536,13 @@ namespace OpenSage.Loaders {
 		public void* run(){
 			while(should_run){
 				Av.Codec.Packet packet = new Av.Codec.Packet();
+				
 				// Get the encoded packet
-				if(format_ctx.read_frame(packet) < 0)
+				int ret = format_ctx.read_frame(packet);
+				if(ret == Av.Util.Error.EOF){
+					should_run = false;
 					break;
+				}
 
 				processPacket(packet);
 			}
