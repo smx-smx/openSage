@@ -461,6 +461,16 @@ namespace OpenSage.Loaders {
 		public bool play(VideoLoader *loader){
 			playerThread = new GLib.Thread<void*>(null, this.run);
 			
+			// Audio frame consumer
+			aud_task = new AudioFrameConsumer(
+				audio_cts,
+				format_ctx,
+				audio_codec_ctx,
+				audio_index,
+				audioFrameQ
+			);
+			audioThread = new GLib.Thread<void *>(null, aud_task.run);
+			
 			// Video frame consumer
 			vid_task = new VideoFrameConsumer(
 				this,
@@ -474,16 +484,6 @@ namespace OpenSage.Loaders {
 			/* chain events */
 			Handler.ChainEvents(vid_task, loader);
 			videoThread = new GLib.Thread<void *>(null, vid_task.run);
-			
-			// Audio frame consumer
-			aud_task = new AudioFrameConsumer(
-				audio_cts,
-				format_ctx,
-				audio_codec_ctx,
-				audio_index,
-				audioFrameQ
-			);
-			audioThread = new GLib.Thread<void *>(null, aud_task.run);
 			
 			return true;
 		}
@@ -560,6 +560,8 @@ namespace OpenSage.Loaders {
 			private unowned Av.Format.Context? format_ctx;	// Demuxer
 			private Av.Codec.Context? video_codec_ctx;		// Video Decoder
 			private Av.Codec.Context? audio_codec_ctx;		// Audio Decoder
+			
+			private VideoPlayer player;
 			
 			// Stream indexes
 			private int video_index = -1;
@@ -648,7 +650,7 @@ namespace OpenSage.Loaders {
 				}
 				
 				// The frame producer
-				VideoPlayer player = new VideoPlayer(
+				player = new VideoPlayer(
 					format_ctx,
 					// video
 					videoFrameQ,
