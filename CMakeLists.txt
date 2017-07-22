@@ -36,6 +36,11 @@ file(GLOB_RECURSE vapi_list RELATIVE "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
 message(STATUS "Found Sources: ${source_list}")
 message(STATUS "Found VAPIs: ${vapi_list}")
 
+set(valac_defines "")
+if(MINGW)
+	list(APPEND valac_defines -D MINGW)
+endif()
+
 vala_precompile(VALA_C
 	${source_list}
 PACKAGES
@@ -43,7 +48,7 @@ PACKAGES
     posix
     gee-0.8
 OPTIONS
-    --thread
+    --thread ${valac_defines}
 CUSTOM_VAPIS
     ${vapi_list}
 GENERATE_VAPI
