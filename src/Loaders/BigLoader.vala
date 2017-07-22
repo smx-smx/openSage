@@ -99,7 +99,7 @@ namespace OpenSage.Loaders {
 				// Cast to VAPI type required to handle the R/O string properly
 				OpenSage.Loaders.Big.BigEntry *pEntry = (OpenSage.Loaders.Big.BigEntry *)(data + offset);
 				BigEntry entry = BigEntry.import(pEntry);
-				stdout.printf("[%u] %s\n", i, entry.name);
+				//stdout.printf("[%u] %s\n", i, entry.name);
 
 				bigFiles.set(entry.name, entry);
 
