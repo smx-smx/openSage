@@ -3,6 +3,8 @@ namespace OpenSage {
 		private static Engine engine;
 
 		public static int main(string[] args){
+			MingwExceptionHandler.init();
+		
 			if (!Thread.supported ()) {
 				stderr.printf ("Cannot run without thread support.\n");
 				return 1;

@@ -1,4 +1,6 @@
 using Posix;
+namespace OpenSage {
+
 public class Utils {
 	public static void hexdump(uint8 *data, size_t size) {
         var builder = new StringBuilder.sized (16);
@@ -49,4 +51,6 @@ public class Utils {
 
         return buffer;
     }
+}
+
 }

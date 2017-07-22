@@ -84,8 +84,8 @@ add_subdirectory(native)
 include_directories(native/headers)
 include_directories(native/libmfile)
 
-target_link_libraries(openSage
-    ${GLIB2_LIBRARIES}
+set(opensage_libs
+	${GLIB2_LIBRARIES}
     ${GIO2_LIBRARIES}
     ${GOBJECT2_LIBRARIES}
     ${GEE_LIBRARIES}
@@ -100,3 +100,10 @@ target_link_libraries(openSage
     ${SWRESAMPLE_LIBRARIES}
     mfile
 )
+
+if(MINGW)
+	find_library(ExcHndl exchndl)
+	list(APPEND opensage_libs ${ExcHndl})
+endif()
+
+target_link_libraries(openSage ${opensage_libs})
