@@ -3,7 +3,7 @@ namespace OpenSage {
 		private static Engine engine;
 
 		public static int main(string[] args){
-			#if __MINGW32__
+			#if MINGW
 			MingwExceptionHandler.init();
 			#endif
 		
