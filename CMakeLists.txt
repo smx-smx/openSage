@@ -109,6 +109,9 @@ set(opensage_libs
 if(MINGW)
 	find_library(ExcHndl exchndl)
 	list(APPEND opensage_libs ${ExcHndl})
+elseif(UNIX)
+	find_library(liblm m)
+	list(APPEND opensage_libs ${liblm})
 endif()
 
 target_link_libraries(openSage ${opensage_libs})
