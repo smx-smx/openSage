@@ -1,7 +1,7 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
-namespace OpenSage.Resources.W3D.Chunks {
+namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class VertexMaterialsVisitor : ChunkVisitor {
 
 		public VertexMaterialVisitor vertex_material;

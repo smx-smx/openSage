@@ -1,18 +1,17 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
-namespace OpenSage.Resources.W3D.Chunks {
-	public class TextureStageVisitor : ChunkVisitor {
-
-		public TextureStageVisitor(StreamCursor cursor){
+namespace OpenSage.Resources.W3D.ChunkVisitors {
+	public class HLodArrayVisitor : ChunkVisitor {
+		public HLodArrayVisitor(StreamCursor cursor){
 			base(cursor);
 			base.setup(isKnown, visit);
 		}
 
 		public bool isKnown(ChunkType type){
 			switch(type){
-				case ChunkType.TEXTURE_IDS:
-				case ChunkType.STAGE_TEXCOORDS:
+				case ChunkType.HLOD_SUB_OBJECT_ARRAY_HEADER:
+				case ChunkType.HLOD_SUB_OBJECT:
 					return true;
 				default:
 					return false;
@@ -21,11 +20,11 @@ namespace OpenSage.Resources.W3D.Chunks {
 
 		public VisitorResult visit(ChunkHeader hdr, StreamCursor cursor){
 			switch(hdr.ChunkType){
-				case ChunkType.TEXTURE_IDS:
-					stdout.printf("[TEXTURE_STAGE] => Texture IDs\n");
+				case ChunkType.HLOD_SUB_OBJECT_ARRAY_HEADER:
+					stdout.printf("[HLOD_ARRAY] => Header\n");
 					return VisitorResult.OK;
-				case ChunkType.STAGE_TEXCOORDS:
-					stdout.printf("[TEXTURE_STAGE] => Stage TexCoords\n");
+				case ChunkType.HLOD_SUB_OBJECT:				
+					stdout.printf("[HLOD_ARRAY] => Sub Object\n");
 					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;

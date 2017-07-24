@@ -1,7 +1,7 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
-namespace OpenSage.Resources.W3D.Chunks {
+namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class MeshVisitor : ChunkVisitor {
 		public Vapi.W3D.HTree.Hierarchy *hierarchy;
 		public unowned Vapi.W3D.HTree.Pivot[] pivots;

@@ -1,19 +1,17 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
-namespace OpenSage.Resources.W3D.Chunks {
-	public class TexturesVisitor : ChunkVisitor {
+namespace OpenSage.Resources.W3D.ChunkVisitors {
+	public class TextureVisitor : ChunkVisitor {
 
-		public TextureVisitor texture;
-
-		public TexturesVisitor(StreamCursor cursor){
+		public TextureVisitor(StreamCursor cursor){
 			base(cursor);
 			base.setup(isKnown, visit);
 		}
 
 		public bool isKnown(ChunkType type){
 			switch(type){
-				case ChunkType.TEXTURE:
+				case ChunkType.TEXTURE_NAME:
 					return true;
 				default:
 					return false;
@@ -22,10 +20,9 @@ namespace OpenSage.Resources.W3D.Chunks {
 
 		public VisitorResult visit(ChunkHeader hdr, StreamCursor cursor){
 			switch(hdr.ChunkType){
-				case ChunkType.TEXTURE:
-					stdout.printf("[TEXTURES] => Texture\n");
-					texture = new TextureVisitor(cursor);
-					return texture.run();
+				case ChunkType.TEXTURE_NAME:
+					stdout.printf("[TEXTURE] => Texture Name\n");
+					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;
 		}

@@ -3,7 +3,7 @@ using OpenSage.Support;
 
 using Vapi.W3D.Chunk;
 
-namespace OpenSage.Resources.W3D.Chunks {
+namespace OpenSage.Resources.W3D {
 	
 	public enum VisitorResult {
 		UNKNOWN_DATA = -3,

@@ -1,7 +1,7 @@
 using Gee;
 
 using OpenSage.Support;
-using OpenSage.Resources.W3D.Chunks;
+using OpenSage.Resources.W3D.ChunkVisitors;
 
 using Vapi.W3D.Chunk;
 
