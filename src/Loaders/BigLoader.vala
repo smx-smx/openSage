@@ -36,8 +36,12 @@ namespace OpenSage.Loaders {
 		public static BigHeader? import(BigHeader *data){
 			char[] _magic = data.magic;
 			string magic = (string)_magic;
-			if(magic != BIG_MAGIC1 && magic != BIG_MAGIC2)
+			magic.data[4] = 0x00;
+
+			if(magic != BIG_MAGIC1 && magic != BIG_MAGIC2){
+				stderr.printf("'%s' is not a valid BIG magic\n", magic);
 				return null;
+			}
 
 			BigHeader hdr = BigHeader();
 			hdr.magic_string = magic;
@@ -71,7 +75,6 @@ namespace OpenSage.Loaders {
 			uint8* data = bigFile.data();
 			
 			stdout.printf("Big: Reading %u bytes at @%x\n", entry.length, entry.offset);
-			stdout.flush();
 			
 			//unowned because we want a R/O pointer to it
 			unowned uint8[] buf = (uint8[])(data + entry.offset);
@@ -82,6 +85,10 @@ namespace OpenSage.Loaders {
 		public bool load(string path){
 			bigFile = MFILE.open(path, Posix.O_RDONLY);
 			uint8* data = bigFile.data();
+			if(data == null){
+				stderr.printf("Failed to open BIG file '%s'\n", path);
+				return false;
+			}
 			
 			BigHeader? hdr = BigHeader.import((BigHeader *)data);
 			if(hdr == null){
