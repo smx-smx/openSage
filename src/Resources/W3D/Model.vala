@@ -36,7 +36,6 @@ namespace OpenSage.Resources.W3D {
 				case ChunkType.LIGHT:
 				case ChunkType.EMITTER:
 				case ChunkType.AGGREGATE:
-				case ChunkType.HLOD:
 				case ChunkType.BOX:
 				case ChunkType.SPHERE:
 				case ChunkType.RING:
@@ -90,9 +89,6 @@ namespace OpenSage.Resources.W3D {
 					break;
 				case ChunkType.AGGREGATE:
 					stdout.printf("[MODEL] => Aggregate\n");
-					break;
-				case ChunkType.HLOD:
-					stdout.printf("[MODEL] => HLod\n");
 					break;
 				case ChunkType.BOX:
 					stdout.printf("[MODEL] => Box\n");

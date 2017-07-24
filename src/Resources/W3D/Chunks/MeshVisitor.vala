@@ -10,6 +10,7 @@ namespace OpenSage.Resources.W3D.Chunks {
 		public VertexMaterialsVisitor vertex_materials;
 		public TexturesVisitor textures;
 		public MaterialPassVisitor material_pass;
+		public HLodVisitor hlod;
 
 		public MeshVisitor(StreamCursor cursor){
 			base(cursor);
@@ -96,8 +97,9 @@ namespace OpenSage.Resources.W3D.Chunks {
 					material_pass = new MaterialPassVisitor(cursor);
 					return material_pass.run();
 				case ChunkType.HLOD:
-					stdout.printf("[MESH] => HLOD\n");
-					return VisitorResult.OK;
+					stdout.printf("[MODEL] => HLod\n");
+					hlod = new HLodVisitor(cursor);
+					return hlod.run();
 
 			}
 			return VisitorResult.UNKNOWN_DATA;
