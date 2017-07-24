@@ -3,6 +3,10 @@ namespace OpenSage {
 		private static Engine engine;
 
 		public static int main(string[] args){
+			// Disable stdout/stderr buffering
+			Posix.setvbuf(Posix.stdout, null, Posix.BufferMode.Unbuffered, 0);
+			Posix.setvbuf(Posix.stderr, null, Posix.BufferMode.Unbuffered, 0);
+
 			#if MINGW
 			MingwExceptionHandler.init();
 			#endif
