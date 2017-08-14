@@ -48,7 +48,9 @@ PACKAGES
     posix
     gee-0.8
 OPTIONS
-    --thread ${valac_defines}
+    --disable-warnings
+    --thread
+    ${valac_defines}
 CUSTOM_VAPIS
     ${vapi_list}
 GENERATE_VAPI

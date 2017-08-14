@@ -1,6 +1,8 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
+using CGlm;
+
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TextureStageVisitor : ChunkVisitor {
 
@@ -8,6 +10,8 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 			base(cursor);
 			base.setup(isKnown, visit);
 		}
+
+		public unowned TextureCoordinates[] texcoords;
 
 		public bool isKnown(ChunkType type){
 			switch(type){
@@ -26,6 +30,9 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 					return VisitorResult.OK;
 				case ChunkType.STAGE_TEXCOORDS:
 					stdout.printf("[TEXTURE_STAGE] => Stage TexCoords\n");
+					texcoords = (TextureCoordinates[])(cursor.ptr);
+					texcoords.length = (int)(hdr.ChunkSize / sizeof(TextureCoordinates));
+					cursor.skip(hdr.ChunkSize);
 					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;

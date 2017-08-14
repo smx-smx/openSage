@@ -38,7 +38,7 @@ public class VBO : Object {
 	 * 
 	 * @param data Array to bind to the OpenGL buffer
 	 */
-	public VBO (GLfloat[] data) throws CoreError {
+	public VBO (void *data, size_t size) throws CoreError {
 		GLuint id_array[1];
 		glGenBuffers (1, id_array);
 		id = id_array[0];
@@ -48,7 +48,8 @@ public class VBO : Object {
 		}
 		
 		glBindBuffer (GL_ARRAY_BUFFER, id);
-		glBufferData (GL_ARRAY_BUFFER, data.length * sizeof (GLfloat), (GLvoid[]) data, GL_STATIC_DRAW);
+		//let me check that
+		glBufferData (GL_ARRAY_BUFFER, (GLsizei)size, (GLvoid[]) data, GL_STATIC_DRAW);
 		glBindBuffer (GL_ARRAY_BUFFER, 0);
 	}
 	
@@ -71,6 +72,26 @@ public class VBO : Object {
 	public void apply_as_vertex_array (GLint attribute, GLsizei stride) {
 		make_current ();
 		glVertexAttribPointer (attribute, stride, GL_FLOAT, (GLboolean) GL_FALSE, 0, null);
+	}
+	//this must be the root of evil yea
+	public void add_attribute(
+		uint index, ulong size, GLenum type, int should_normalize,
+		ulong spacing, ulong offset
+	){
+		GLvoid[] offsetValue = null;
+		if(offset != 0)
+			offsetValue = (GLvoid[])offset;
+
+		glEnableVertexAttribArray(index);
+		glVertexAttribPointer(
+			index,
+			(GLint)size,
+			type,
+			(GLboolean)should_normalize,
+			(GLsizei)spacing,
+			offsetValue
+		);
+
 	}
 	
 	~VBO () {

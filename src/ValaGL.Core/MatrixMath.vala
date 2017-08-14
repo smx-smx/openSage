@@ -59,37 +59,41 @@ public struct Vec3 {
 	/**
 	 * Adds the given vector, component-wise.
 	 */
-	public void add (ref Vec3 other) {
+	public Vec3 add (ref Vec3 other) {
 		data[0] += other.data[0];
 		data[1] += other.data[1];
 		data[2] += other.data[2];
+		return this;
 	}
 	
 	/**
 	 * Subtracts the given vector, component-wise.
 	 */
-	public void sub (ref Vec3 other) {
+	public Vec3 sub (ref Vec3 other) {
 		data[0] -= other.data[0];
 		data[1] -= other.data[1];
 		data[2] -= other.data[2];
+		return this;
 	}
 	
 	/**
 	 * Multiplies the given vector, component-wise.
 	 */
-	public void mul_vec (ref Vec3 other) {
+	public Vec3 mul_vec (ref Vec3 other) {
 		data[0] *= other.data[0];
 		data[1] *= other.data[1];
 		data[2] *= other.data[2];
+		return this;
 	}
 	
 	/**
 	 * Divides the given vector, component-wise.
 	 */
-	public void div_vec (ref Vec3 other) {
+	public Vec3 div_vec (ref Vec3 other) {
 		data[0] /= other.data[0];
 		data[1] /= other.data[1];
 		data[2] /= other.data[2];
+		return this;
 	}
 	
 	/**
@@ -112,19 +116,21 @@ public struct Vec3 {
 	/**
 	 * Multiplies the vector by the given scalar.
 	 */
-	public void mul (GLfloat factor) {
+	public Vec3 mul (GLfloat factor) {
 		data[0] *= factor;
 		data[1] *= factor;
 		data[2] *= factor;
+		return this;
 	}
 	
 	/**
 	 * Divides the vector by the given scalar.
 	 */
-	public void div (GLfloat factor) {
+	public Vec3 div (GLfloat factor) {
 		data[0] /= factor;
 		data[1] /= factor;
 		data[2] /= factor;
+		return this;
 	}
 	
 	/**
@@ -138,8 +144,8 @@ public struct Vec3 {
 	 * Normalizes this vector, dividing it by its norm.
 	 * If the norm is zero, the result is undefined.
 	*/
-	public void normalize () {
-		div (norm ());
+	public Vec3 normalize () {
+		return div (norm ());
 	}
 	
 	/**
@@ -210,41 +216,45 @@ public struct Vec4 {
 	/**
 	 * Adds the given vector, component-wise.
 	 */
-	public void add (ref Vec4 other) {
+	public Vec4 add (ref Vec4 other) {
 		data[0] += other.data[0];
 		data[1] += other.data[1];
 		data[2] += other.data[2];
 		data[3] += other.data[3];
+		return this;
 	}
 	
 	/**
 	 * Subtracts the given vector, component-wise.
 	 */
-	public void sub (ref Vec4 other) {
+	public Vec4 sub (ref Vec4 other) {
 		data[0] -= other.data[0];
 		data[1] -= other.data[1];
 		data[2] -= other.data[2];
 		data[3] -= other.data[3];
+		return this;
 	}
 	
 	/**
 	 * Multiplies the given vector, component-wise.
 	 */
-	public void mul_vec (ref Vec4 other) {
+	public Vec4 mul_vec (ref Vec4 other) {
 		data[0] *= other.data[0];
 		data[1] *= other.data[1];
 		data[2] *= other.data[2];
 		data[3] *= other.data[3];
+		return this;
 	}
 	
 	/**
 	 * Divides the given vector, component-wise.
 	 */
-	public void div_vec (ref Vec4 other) {
+	public Vec4 div_vec (ref Vec4 other) {
 		data[0] /= other.data[0];
 		data[1] /= other.data[1];
 		data[2] /= other.data[2];
 		data[3] /= other.data[3];
+		return this;
 	}
 	
 	/**
@@ -259,21 +269,23 @@ public struct Vec4 {
 	/**
 	 * Multiplies the vector by the given scalar.
 	 */
-	public void mul (GLfloat factor) {
+	public Vec4 mul (GLfloat factor) {
 		data[0] *= factor;
 		data[1] *= factor;
 		data[2] *= factor;
 		data[3] *= factor;
+		return this;
 	}
 	
 	/**
 	 * Divides the vector by the given scalar.
 	 */
-	public void div (GLfloat factor) {
+	public Vec4 div (GLfloat factor) {
 		data[0] /= factor;
 		data[1] /= factor;
 		data[2] /= factor;
 		data[3] /= factor;
+		return this;
 	}
 	
 	/**
@@ -287,8 +299,8 @@ public struct Vec4 {
 	 * Normalizes this vector, dividing it by its norm.
 	 * If the norm is zero, the result is undefined.
 	*/
-	public void normalize () {
-		div (norm ());
+	public Vec4 normalize () {
+		return div (norm ());
 	}
 	
 	/**
@@ -626,43 +638,47 @@ public struct Mat4 {
 	/**
 	 * Adds the given matrix, component-wise.
 	 */
-	public void add (ref Mat4 other) {
+	public Mat4 add (ref Mat4 other) {
 		for (int i = 0; i < 16; i++) {
 			data[i] += other.data[i];
 		}
+		return this;
 	}
 	
 	/**
 	 * Subtracts the given matrix, component-wise.
 	 */
-	public void sub (ref Mat4 other) {
+	public Mat4 sub (ref Mat4 other) {
 		for (int i = 0; i < 16; i++) {
 			data[i] -= other.data[i];
 		}
+		return this;
 	}
 	
 	/**
 	 * Multiplies the matrix by the given scalar, component-wise.
 	 */
-	public void mul (GLfloat factor) {
+	public Mat4 mul (GLfloat factor) {
 		for (int i = 0; i < 16; i++) {
 			data[i] *= factor;
 		}
+		return this;
 	}
 	
 	/**
 	 * Divides the matrix by the given scalar, component-wise.
 	 */
-	public void div (GLfloat factor) {
+	public Mat4 div (GLfloat factor) {
 		for (int i = 0; i < 16; i++) {
 			data[i] /= factor;
 		}
+		return this;
 	}
 	
 	/**
 	 * Multiplies the given matrix using the linear algebra definition of matrix multiplication.
 	 */
-	public void mul_mat (ref Mat4 other) {
+	public Mat4 mul_mat (ref Mat4 other) {
 		float res[16]; // Zero initialized
 		
 		for (int i = 0; i < 4; i++) {
@@ -676,6 +692,7 @@ public struct Mat4 {
 		}
 		
 		data = res;
+		return this;
 	}
 	
 	/**

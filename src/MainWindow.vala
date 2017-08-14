@@ -29,7 +29,9 @@ namespace OpenSage {
 		}
 		
 		private void clear(){
+			glDepthMask((GLboolean)GL_TRUE);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glColor4f (0.0f, 0.0f, 0.0f, 0.0f);
 		}
 		
 		private void swap(){
@@ -74,8 +76,8 @@ namespace OpenSage {
 				"openSage",
 				Video.Window.POS_CENTERED,
 				Video.Window.POS_CENTERED,
-				this.settings.ScreenWidth,
-				this.settings.ScreenHeight,
+				EngineSettings.ScreenWidth,
+				EngineSettings.ScreenHeight,
 				Video.WindowFlags.OPENGL
 			);
 					
@@ -83,17 +85,20 @@ namespace OpenSage {
 				stderr.printf("Cannot create SDL2 Window\n");
 				return false;
 			}
-
+			Video.GL.set_attribute(Video.GL.Attributes.CONTEXT_FLAGS, Video.GL.ContextFlag.DEBUG);
+			
 			this.context = Video.GL.Context.create(this.window);
 			Video.GL.make_current(this.window, this.context);
 
 			// Init GLEW after GLFW
+			GLEW.glewExperimental = GL_TRUE;
 			GLEW.glewInit();
 			
 			glEnable(GL_DEBUG_OUTPUT);
 			glDebugMessageCallback((GLDEBUGPROC)on_debug_message, null);
 			
-			glViewport(0, 0, this.settings.ScreenWidth, this.settings.ScreenHeight);
+			glEnable (GL_DEPTH_TEST);
+			glViewport(0, 0, EngineSettings.ScreenWidth, EngineSettings.ScreenHeight);
 			
 			return true;
 		}
@@ -108,7 +113,7 @@ namespace OpenSage {
 
 			Handler handler = new Handler();
 			handler.SwitchState(GameState.SPLASH);
-			result = handler.load(settings.RootDir + "/Install_Final.bmp");
+			result = handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
 			if(!result){
 				stderr.printf("Failed to open BMP\n");
 				run = false;
@@ -120,6 +125,21 @@ namespace OpenSage {
 			
 			handler.update(); // Show Splash Screen
 			
+			BigLoader b = new BigLoader();
+			result = b.load(EngineSettings.RootDir + "/W3DZH.big");
+			if(!result){
+				stderr.printf("Failed to load BIG file\n");
+			} else {
+				//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
+				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/12ABLT.W3D");
+				if(data != null){
+					var m = new OpenSage.Resources.W3D.Model(data);
+					m.init_renderer();
+					OpenSage.Handler.ChainEvents(m.renderer, handler);
+				}
+			}
+			handler.SwitchState(GameState.NONE);
+						
 			while(run){			
 				/* Do we have any texture to render? */
 				Texture? texture = TextureQueue.try_pop();
@@ -131,13 +151,15 @@ namespace OpenSage {
 					SDL.Timer.delay(1);
 				}
 				
-				if(handler.State == GameState.SPLASH){
+				handler.render();
+
+				if(false && handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
 					//Posix.sleep(2);
 					
 					stdout.printf("Playing intro video...\n");
 					handler.SwitchState(GameState.CINEMATIC);
-					result = handler.load(settings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
+					result = handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
 					
 					handler.onTextureReady.connect(onTexture);
 					
@@ -158,8 +180,6 @@ namespace OpenSage {
 					if(ev.key.keysym.sym == Input.Keycode.ESCAPE)
 						run = false;
 				}
-				
-				stdout.flush();
 			}
 			
 			this.terminate();

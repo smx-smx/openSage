@@ -30,7 +30,11 @@ public errordomain CoreError {
 	/**
 	 * Indicates a vertex or fragment shader initialization error.
 	 */
-	SHADER_INIT,
+    SHADER_INIT,
+    /**
+     * Indicates a vertex array object initialization error.
+     */
+    VAO_INIT,
 	/**
 	 * Indicates a vertex buffer object initialization error.
 	 */

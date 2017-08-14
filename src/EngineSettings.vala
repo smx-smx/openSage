@@ -1,8 +1,8 @@
 namespace OpenSage {
 	public class EngineSettings {
-		public int ScreenWidth = 800;
-		public int ScreenHeight = 600;
-		public string RootDir = ".";
+		public static int ScreenWidth = 800;
+		public static int ScreenHeight = 600;
+		public static string RootDir = ".";
 		
 		const string OPTSTRING = "r:";
 		

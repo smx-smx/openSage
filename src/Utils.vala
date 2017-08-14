@@ -41,13 +41,16 @@ public class Utils {
         if(!file.query_exists())
             return null;
         
-        var file_info = file.query_info ("*", FileQueryInfoFlags.NONE);
-        var file_size = file_info.get_size();
+        uint8[] buffer = null;
+        try {
+            var file_info = file.query_info ("*", FileQueryInfoFlags.NONE);
+            var file_size = file_info.get_size();
 
-        var file_stream = file.read ();
-        var data_stream = new DataInputStream (file_stream);
-        uint8[] buffer = new uint8[file_size];
-        data_stream.read (buffer);
+            var file_stream = file.read ();
+            var data_stream = new DataInputStream (file_stream);
+            buffer = new uint8[file_size];
+            data_stream.read (buffer);
+        } catch(GLib.Error err){}
 
         return buffer;
     }

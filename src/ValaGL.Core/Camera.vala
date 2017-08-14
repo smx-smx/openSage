@@ -33,8 +33,8 @@ namespace ValaGL.Core {
  * the scope of this project.
 */
 public class Camera : Object {
-	private Mat4 projection_matrix;
-	private Mat4 view_matrix;
+	public Mat4 projection_matrix;
+	public Mat4 view_matrix;
 	private Mat4 result_matrix;
 	private Mat4 total_matrix;
 	

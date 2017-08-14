@@ -12,17 +12,20 @@ namespace W3D {
 	[CCode(cname = "MESH_PATH_ENTRY_LEN")]
 	const int MESH_PATH_ENTRY_LEN;
 
+	[CCode(cname = "IOVector2Struct", cheader_filename = "w3d_typedef.h")]
 	public struct Vector2 {
 		public float x;
 		public float y;
 	}
 
+	[CCode(cname = "IOVector3Struct", cheader_filename = "w3d_typedef.h")]
 	public struct Vector3 {
 		public float x;
 		public float y;
 		public float z;
 	}
 
+	[CCode(cname = "IOQuaternionStruct", cheader_filename = "w3d_typedef.h")]
 	public struct Vector4 {
 		public float x;
 		public float y;

@@ -22,6 +22,7 @@
 */
 
 using GL;
+using Gee;
 
 namespace ValaGL.Core {
 
@@ -33,6 +34,8 @@ public class GLProgram : Object {
 	private GLuint fragment_shader = 0;
 	private GLuint prog_id = 0;
 	
+	public HashMap<string, uint> uniforms = new HashMap<string, uint>();
+
 	/**
 	 * Instantiates a new OpenGL program object, reading the vertex and fragment shaders from files.
 	 * 
@@ -75,6 +78,10 @@ public class GLProgram : Object {
 		}
 	}
 	
+	public void add_uniform(string name){
+		uniforms[name] = (uint)get_uniform_location(name);
+	}
+
 	/**
 	 * Gets the ID for the shader ``attribute`` variable with the specified name.
 	 * 

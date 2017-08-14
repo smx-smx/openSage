@@ -38,7 +38,7 @@ public class IBO : Object {
 	 * 
 	 * @param data Array to bind to the OpenGL buffer
 	 */
-	public IBO (GLushort[] data) throws CoreError {
+	public IBO (void *data, size_t size) throws CoreError {
 		GLuint id_array[1];
 		glGenBuffers (1, id_array);
 		id = id_array[0];
@@ -48,7 +48,7 @@ public class IBO : Object {
 		}
 		
 		glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, id);
-		glBufferData (GL_ELEMENT_ARRAY_BUFFER, data.length * sizeof (GLushort), (GLvoid[]) data, GL_STATIC_DRAW);
+		glBufferData (GL_ELEMENT_ARRAY_BUFFER, (GLsizei)size, (GLvoid[]) data, GL_STATIC_DRAW);
 		glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	

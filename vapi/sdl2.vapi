@@ -2839,9 +2839,14 @@ namespace SDL {
 				CORE, COMPATIBILITY, ES;
 			}// GLprofile
 
+
 			[CCode (cname = "SDL_GLcontextFlag", cprefix = "SDL_GL_CONTEXT_", lower_case_csuffix = "flag", cheader_filename = "SDL2/SDL_video.h")]
 			public enum ContextFlag {
-				DEBUG, FORWARD_COMPATIBLE, ROBUST_ACCESS, RESET_ISOLATION
+				[CCode(cname = "SDL_GL_CONTEXT_DEBUG_FLAG")]
+				DEBUG,
+				FORWARD_COMPATIBLE,
+				ROBUST_ACCESS,
+				RESET_ISOLATION
 			}
 			[CCode (cname = "SDL_GL_LoadLibrary")]
 			public static int load_library (string path);

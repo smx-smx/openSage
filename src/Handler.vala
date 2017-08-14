@@ -11,9 +11,21 @@ namespace OpenSage {
 	public class Handler : FrameProvider {
 		public GameState State {get; private set;}
 		private void *stageHandle;
-				
+
 		public Handler(){
 			this.State = GameState.NONE;
+			this.set_renderer(render_func);
+		}
+
+		private new void render_func(){
+			FrameProvider *current = this;
+			while(true){
+				if(current->next == null)
+					break;				
+				current = current->next;
+				current->render();
+
+			}
 		}
 		
 		/* Chains events from one FrameProvider to another */
@@ -27,6 +39,7 @@ namespace OpenSage {
 			prv.onTextureReady.connect((width, height, data) => {
 				dst.onTextureReady(width, height, data);
 			});
+			dst.next = prv;
 		}
 		
 		public bool load(string url){			

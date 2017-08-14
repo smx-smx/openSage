@@ -29,4 +29,7 @@ public class GlewDummy {
 namespace GLEW {
 	[CCode (cname = "glewInit")]
 	public static uint glewInit ();
+	
+	[CCode (cname = "glewExperimental")]
+	public static uint glewExperimental;
 }

@@ -95,8 +95,8 @@ namespace OpenSage.Loaders {
 				codec_ctx.channels
 			);
 
-			Sample.Format swr_format;
-			int swr_rate;
+			//Sample.Format swr_format;
+			//int swr_rate;
 			
 			swr_ctx = Sw.Resample.Context.alloc_set_opts(
 				audio_out_layout,
@@ -418,7 +418,7 @@ namespace OpenSage.Loaders {
 		private GLib.Thread<void *> videoThread;
 		private GLib.Thread<void *> audioThread;
 		
-		private Cancellable player_cts = new Cancellable();
+		//private Cancellable player_cts = new Cancellable();
 		private Cancellable video_cts = new Cancellable();
 		private Cancellable audio_cts = new Cancellable();
 		
@@ -522,7 +522,6 @@ namespace OpenSage.Loaders {
 				return false;
 			}
 			
-			bool result = false;
 			if(packet.stream_index == video_index){
 				return processCodecPacket(video_codec_ctx, packet, videoFrameQ);
 			} else if(packet.stream_index == audio_index){
