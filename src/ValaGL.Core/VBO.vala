@@ -73,7 +73,7 @@ public class VBO : Object {
 		make_current ();
 		glVertexAttribPointer (attribute, stride, GL_FLOAT, (GLboolean) GL_FALSE, 0, null);
 	}
-	//this must be the root of evil yea
+	
 	public void add_attribute(
 		uint index, ulong size, GLenum type, int should_normalize,
 		ulong spacing, ulong offset
