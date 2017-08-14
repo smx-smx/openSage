@@ -134,8 +134,8 @@ namespace OpenSage {
 				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/12ABLT.W3D");
 				if(data != null){
 					var m = new OpenSage.Resources.W3D.Model(data);
-					m.init_renderer();
-					OpenSage.Handler.ChainEvents(m.renderer, handler);
+					var r = new OpenSage.Resources.W3D.Renderer(m);
+					OpenSage.Handler.ChainEvents(r.renderer, handler);
 				}
 			}
 			handler.SwitchState(GameState.NONE);
