@@ -10,6 +10,6 @@ uniform float t;
 
 void main()
 {
-	vec2 uv = vec2(out_txcoord.x, -out_txcoord.y);
+	vec2 uv = vec2(out_txcoord.x, out_txcoord.y);
 	color = texture(diffuse, uv);
 }

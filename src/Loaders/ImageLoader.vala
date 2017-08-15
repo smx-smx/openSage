@@ -67,14 +67,14 @@ namespace OpenSage.Loaders {
 			
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)minification);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)magnification);
-
+			
 			if (
 				minification == GL_LINEAR_MIPMAP_LINEAR   ||
 				minification == GL_LINEAR_MIPMAP_NEAREST  ||
 				minification == GL_NEAREST_MIPMAP_LINEAR  ||
 				minification == GL_NEAREST_MIPMAP_NEAREST
 			){
-				glGenerateMipmap(GL_TEXTURE_2D);				
+				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 
 			GLenum glError = glGetError();

@@ -48,7 +48,7 @@ public class Renderer {
 				continue;
 			}
 			
-			Vec3 eye = Vec3.from_data (20.0f, 0.0f, 25.0f);
+			Vec3 eye = Vec3.from_data (50.0f, 0.0f, 24.0f);
 			Vec3 center = Vec3.from_data (0.0f, 0.0f, 0.0f);
 			Vec3 up = Vec3.from_data (0.0f, 0.0f, 1.0f);
 			
@@ -77,7 +77,7 @@ public class Renderer {
 	private void init_renderer(){
 		modelVao = new VAO();
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_ALWAYS);
+		glDepthFunc(GL_LEQUAL);
 	
 		//WireFrame mode
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
