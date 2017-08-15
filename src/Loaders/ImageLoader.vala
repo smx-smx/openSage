@@ -37,7 +37,6 @@ namespace OpenSage.Loaders {
 			
 			uint8 *bits = bmp32->get_bits();
 			
-			#if false
 			bmp32->convert_to_raw_bits(
 				bits,
 				(int)bmp32->get_pitch(),
@@ -45,9 +44,8 @@ namespace OpenSage.Loaders {
 				FreeImage.FI_RGBA_RED_MASK,
 				FreeImage.FI_RGBA_GREEN_MASK,
 				FreeImage.FI_RGBA_BLUE_MASK,
-				true
+				false
 			);
-			#endif
 
 			glTexImage2D(
 				GL_TEXTURE_2D,

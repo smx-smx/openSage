@@ -32,9 +32,13 @@ namespace OpenSage {
 		}
 		
 		private void clear(){
-			glDepthMask((GLboolean)GL_TRUE);
+			if(Handler.State == GameState.INGAME){
+				glDepthMask((GLboolean)GL_TRUE);
+			}
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glColor4f (0.0f, 0.0f, 0.0f, 0.0f);
+			if(Handler.State == GameState.INGAME){
+				glColor4f (0.0f, 0.0f, 0.0f, 0.00f);
+			}
 		}
 		
 		private void swap(){
@@ -128,6 +132,7 @@ namespace OpenSage {
 			
 			Handler.update(); // Show Splash Screen
 			
+			#if false
 			BigLoader b = new BigLoader();
 			result = b.load(EngineSettings.RootDir + "/W3DZH.big");
 			if(!result){
@@ -140,8 +145,10 @@ namespace OpenSage {
 					var r = new W3D.Renderer.ModelRenderer(m);
 				}
 			}
-			//Handler.SwitchState(GameState.NONE);
-						
+			#endif
+			
+			Handler.SwitchState(GameState.SPLASH);			
+			
 			while(run){			
 				/* Do we have any texture to render? */
 				Texture? texture = TextureQueue.try_pop();
@@ -155,7 +162,7 @@ namespace OpenSage {
 				
 				Handler.render();
 
-				if(false && Handler.State == GameState.SPLASH){
+				if(Handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
 					Posix.sleep(2);
 					

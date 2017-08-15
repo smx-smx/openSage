@@ -19,7 +19,9 @@ public class GLEventHandler : FrameProvider {
 		GLuint[] texture = new GLuint[1]{ 0 };
 		glGenTextures(1, texture);
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
-
+		
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		
 		glTexImage2D(
 			GL_TEXTURE_2D,
 			0,

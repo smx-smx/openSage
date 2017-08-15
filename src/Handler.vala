@@ -5,7 +5,8 @@ namespace OpenSage {
 		NONE = 0,
 		SPLASH = 1,
 		CINEMATIC = 2,
-		LOADING = 3
+		LOADING = 3,
+		INGAME = 4
 	}
 
 	public class Handler : FrameProvider {
@@ -23,7 +24,8 @@ namespace OpenSage {
 				if(current->next == null)
 					break;				
 				current = current->next;
-				current->render();
+				if(current->render_func != null)
+					current->render();
 
 			}
 		}
@@ -53,6 +55,7 @@ namespace OpenSage {
 				case GameState.CINEMATIC:
 					return ((VideoLoader *)this.stageHandle)->load(url);
 				case GameState.LOADING:
+				case GameState.INGAME:
 				default:
 					return false;
 			}
@@ -70,6 +73,8 @@ namespace OpenSage {
 					break;
 				case GameState.LOADING:
 					break;
+				case GameState.INGAME:
+					break;
 			}
 		}
 		
@@ -86,6 +91,8 @@ namespace OpenSage {
 					break;
 				case GameState.LOADING:
 					break;
+				case GameState.INGAME:
+					break;
 			}
 			
 			this.State = state;
@@ -97,6 +104,7 @@ namespace OpenSage {
 					return ((ImageLoader *)this.stageHandle)->update();
 				case GameState.CINEMATIC:
 				case GameState.LOADING:
+				case GameState.INGAME:
 				default:
 					return false;
 			}

@@ -33,6 +33,7 @@ namespace OpenSage.Loaders {
 		private Sample.Format audio_out_format = Sample.Format.S32;
 		private Audio.AudioFormat sdl_out_format = Audio.AudioFormat.S32;
 		
+		private Audio.AudioDevice dev;
 		
 		private int audio_index;
 		
@@ -113,7 +114,7 @@ namespace OpenSage.Loaders {
 				return;
 			}
 			
-			Audio.AudioDevice dev = Audio.AudioDevice (
+			dev = Audio.AudioDevice (
 				null,	//device name, use default
 				false,	//not capture -> playback
 				audio_spec,
@@ -219,9 +220,12 @@ namespace OpenSage.Loaders {
 		
 		public void* run(){
 			while(should_run){
-				Frame *frame = queue.pop();
-				if(frame == null)
+				Frame *frame = queue.try_pop();
+				if(frame == null){
+					bufferFinished.wait();
+					dev.pause(true);
 					break;
+				}
 
 				//stdout.printf("Audio Frame @ %p\n", frame);
 				renderFrame(frame);
@@ -377,7 +381,7 @@ namespace OpenSage.Loaders {
 		
 		public void* run(){
 			while(should_run){
-				Frame *frame = queue.pop();
+				Frame *frame = queue.try_pop ();
 				if(queue.length() < MAXQ_SIZE)
 					slot_available.set();
 
