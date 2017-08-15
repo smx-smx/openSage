@@ -5,13 +5,12 @@ using CGlm;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TextureStageVisitor : ChunkVisitor {
+		public unowned TextureCoordinates[] texcoords;
 
 		public TextureStageVisitor(StreamCursor cursor){
 			base(cursor);
 			base.setup(isKnown, visit);
 		}
-
-		public unowned TextureCoordinates[] texcoords;
 
 		public bool isKnown(ChunkType type){
 			switch(type){
@@ -32,7 +31,7 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 					stdout.printf("[TEXTURE_STAGE] => Stage TexCoords\n");
 					texcoords = (TextureCoordinates[])(cursor.ptr);
 					texcoords.length = (int)(hdr.ChunkSize / sizeof(TextureCoordinates));
-					cursor.skip(hdr.ChunkSize);
+					cursor.skip(texcoords.length * (long)sizeof(TextureCoordinates));
 					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;

@@ -28,6 +28,10 @@ namespace OpenSage {
 			}
 		}
 		
+		public void Chain(FrameProvider prv){
+			ChainEvents(prv, this);
+		}
+
 		/* Chains events from one FrameProvider to another */
 		public static void ChainEvents(FrameProvider prv, FrameProvider dst){
 			prv.onFrameStart.connect(() => {

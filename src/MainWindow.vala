@@ -8,6 +8,8 @@ using OpenSage.Loaders;
 
 namespace OpenSage {
 	public class MainWindow {
+		public static OpenSage.Handler Handler = new OpenSage.Handler();
+
 		GlewDummy *dummy;
 
 		private Video.Window window;
@@ -111,19 +113,19 @@ namespace OpenSage {
 			bool result;
 			bool run = true;
 
-			Handler handler = new Handler();
-			handler.SwitchState(GameState.SPLASH);
-			result = handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
+			//Handler handler = new Handler();
+			Handler.SwitchState(GameState.SPLASH);
+			result = Handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
 			if(!result){
 				stderr.printf("Failed to open BMP\n");
 				run = false;
 			}
 			
 			// Right now, this is for ImageLoader (which isn't multithreaded)
-			handler.onFrameStart.connect(clear);
-			handler.onFrameEnd.connect(swap);
+			Handler.onFrameStart.connect(clear);
+			Handler.onFrameEnd.connect(swap);
 			
-			handler.update(); // Show Splash Screen
+			Handler.update(); // Show Splash Screen
 			
 			BigLoader b = new BigLoader();
 			result = b.load(EngineSettings.RootDir + "/W3DZH.big");
@@ -131,14 +133,13 @@ namespace OpenSage {
 				stderr.printf("Failed to load BIG file\n");
 			} else {
 				//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
-				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/12ABLT.W3D");
+				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
 				if(data != null){
 					var m = new OpenSage.Resources.W3D.Model(data);
 					var r = new OpenSage.Resources.W3D.Renderer(m);
-					OpenSage.Handler.ChainEvents(r.renderer, handler);
 				}
 			}
-			handler.SwitchState(GameState.NONE);
+			//Handler.SwitchState(GameState.NONE);
 						
 			while(run){			
 				/* Do we have any texture to render? */
@@ -151,17 +152,17 @@ namespace OpenSage {
 					SDL.Timer.delay(1);
 				}
 				
-				handler.render();
+				Handler.render();
 
-				if(false && handler.State == GameState.SPLASH){
+				if(false && Handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
-					//Posix.sleep(2);
+					Posix.sleep(2);
 					
 					stdout.printf("Playing intro video...\n");
-					handler.SwitchState(GameState.CINEMATIC);
-					result = handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
+					Handler.SwitchState(GameState.CINEMATIC);
+					result = Handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
 					
-					handler.onTextureReady.connect(onTexture);
+					Handler.onTextureReady.connect(onTexture);
 					
 					if(!result){
 						stderr.printf("Failed to load EA_LOGO.bik\n");

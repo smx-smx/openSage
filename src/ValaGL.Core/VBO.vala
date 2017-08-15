@@ -48,7 +48,6 @@ public class VBO : Object {
 		}
 		
 		glBindBuffer (GL_ARRAY_BUFFER, id);
-		//let me check that
 		glBufferData (GL_ARRAY_BUFFER, (GLsizei)size, (GLvoid[]) data, GL_STATIC_DRAW);
 		glBindBuffer (GL_ARRAY_BUFFER, 0);
 	}
@@ -78,9 +77,7 @@ public class VBO : Object {
 		uint index, ulong size, GLenum type, int should_normalize,
 		ulong spacing, ulong offset
 	){
-		GLvoid[] offsetValue = null;
-		if(offset != 0)
-			offsetValue = (GLvoid[])offset;
+		GLvoid* offsetValue = (GLvoid *)offset;
 
 		glEnableVertexAttribArray(index);
 		glVertexAttribPointer(
@@ -89,7 +86,7 @@ public class VBO : Object {
 			type,
 			(GLboolean)should_normalize,
 			(GLsizei)spacing,
-			offsetValue
+			(GLvoid[]?)offsetValue
 		);
 
 	}

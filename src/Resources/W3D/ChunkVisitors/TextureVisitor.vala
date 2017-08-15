@@ -3,6 +3,7 @@ using Vapi.W3D.Chunk;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TextureVisitor : ChunkVisitor {
+		public unowned string texture_name;
 
 		public TextureVisitor(StreamCursor cursor){
 			base(cursor);
@@ -22,6 +23,7 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 			switch(hdr.ChunkType){
 				case ChunkType.TEXTURE_NAME:
 					stdout.printf("[TEXTURE] => Texture Name\n");
+					texture_name = (string)(cursor.ptr);
 					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;

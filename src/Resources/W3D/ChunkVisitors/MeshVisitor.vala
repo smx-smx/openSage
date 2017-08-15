@@ -7,6 +7,7 @@ using Vapi.W3D.Mesh;
 
 //renderer
 using GL;
+using OpenSage.Loaders;
 using ValaGL.Core;
 //end renderer
 
@@ -33,14 +34,21 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 
 		private VBO mesh_vbo;
 		private IBO mesh_ibo;
+		private ImageLoader ildr = new ImageLoader();
+		private ValaGL.Core.Texture texture;
 
 		public void render(){
-			if(header.NumVertices != 238)
+			if(header.NumVertices != 119)
 				return;
 
 			// Mark the shape's VBO and IBO as current
 			mesh_vbo.make_current();
 			mesh_ibo.make_current();
+
+			
+			glActiveTexture(GL_TEXTURE0);
+			texture.make_current();
+			glUniform1i((GLint)viewer.uniforms["diffuse"], 0);
 
 			// Then render their contents
 			glDrawElements(
@@ -49,27 +57,32 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 				GL_UNSIGNED_SHORT, // format of each index
 				null
 			);
-
-			//mesh.material_pass.texture_stage.texcoords
 		}
 		
 
-		public void init_renderer(){
-			if(header.NumVertices != 238){
+		private GLProgram viewer;
+
+		public void init_renderer(GLProgram viewer){
+			this.viewer = viewer;
+
+			if(header.NumVertices != 119){
 				return;
 			}
+
+			if(!ildr.load(EngineSettings.RootDir + "/avpaladin.dds")){
+				stderr.printf("Texture load failed\n");
+				return;
+			}
+			texture = ildr.get_frame();
+
 			// VBO (vertices)
 			BufferItem[] items = new BufferItem[header.NumVertices];
+			//Memory.set(items, 0x00, sizeof(BufferItem) * items.length);
+
 			for(uint i=0; i<header.NumVertices; i++){
 				items[i].position = vertices[i];
 				items[i].normal = vertices_normals[i];
-				
-				TextureCoordinates dummy = TextureCoordinates();
-				dummy.U = dummy.V = 0.0f;
-				items[i].texcoords = dummy;
-				
-				//TODO
-				//items[i].texcoords = vertex_materials[i].stages
+				items[i].texcoords = material_pass.texture_stage.texcoords[i];
 			}
 
 			stdout.printf("We have %u vertices\n", header.NumVertices);

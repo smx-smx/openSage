@@ -12,7 +12,7 @@ using ValaGL.Core;
 namespace OpenSage.Resources.W3D {
 
 public class Renderer {
-	public FrameProvider renderer;
+	public FrameProvider provider;
 	private GLProgram viewer;
 
 	private Model model;
@@ -26,10 +26,15 @@ public class Renderer {
 	public Renderer(Model model){
 		this.model = model;
 		this.init_renderer();
+		MainWindow.Handler.Chain(this.provider);
+	}
+
+	private void renderMesh(){
+
 	}
 
 	public void render(){
-		renderer.onFrameStart();
+		provider.onFrameStart();
 
 		glUniform1f((GLint)viewer.uniforms["t"], t++);
 
@@ -39,7 +44,7 @@ public class Renderer {
 			angle = 0.0f;
 
 		foreach(MeshVisitor mv in model.meshes){
-			if(mv.header.NumVertices != 238){
+			if(mv.header.NumVertices != 119){
 				continue;
 			}
 			
@@ -66,15 +71,16 @@ public class Renderer {
 			mv.render();
 		}
 
-		renderer.onFrameEnd();
+		provider.onFrameEnd();
 	}
 
-	public void init_renderer(){
+	private void init_renderer(){
 		modelVao = new VAO();
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_ALWAYS);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
+		//WireFrame mode
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		try {
 			viewer = new GLProgram(
@@ -89,6 +95,7 @@ public class Renderer {
 		viewer.make_current();
 		viewer.add_uniform("t");
 		viewer.add_uniform("mvp");
+		viewer.add_uniform("diffuse");
 
 		camera = new Camera();
 		camera.set_perspective_projection (
@@ -99,7 +106,7 @@ public class Renderer {
 		);
 
 		foreach(MeshVisitor mv in model.meshes){
-			mv.init_renderer();
+			mv.init_renderer(viewer);
 		}
 
 		#if false
@@ -140,8 +147,8 @@ public class Renderer {
 		}
 		#endif
 
-		renderer = new FrameProvider();
-		renderer.render_func = this.render;
+		provider = new FrameProvider();
+		provider.render_func = this.render;
 	}
 
 }

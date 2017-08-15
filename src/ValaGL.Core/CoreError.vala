@@ -32,6 +32,10 @@ public errordomain CoreError {
 	 */
     SHADER_INIT,
     /**
+     * Indicates a texture initialization error.
+     */
+    TEXTURE_INIT,
+    /**
      * Indicates a vertex array object initialization error.
      */
     VAO_INIT,
