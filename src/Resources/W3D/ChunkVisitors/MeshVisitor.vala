@@ -1,15 +1,8 @@
 using OpenSage.Support;
 
-//using CGlm;
 using Vapi.W3D;
 using Vapi.W3D.Chunk;
 using Vapi.W3D.Mesh;
-
-//renderer
-using GL;
-using OpenSage.Loaders;
-using ValaGL.Core;
-//end renderer
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	private struct BufferItem {
@@ -31,126 +24,6 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 		public TexturesVisitor textures;
 		public MaterialPassVisitor material_pass;
 		public HLodVisitor hlod;
-
-		private VBO mesh_vbo;
-		private IBO mesh_ibo;
-		private ImageLoader ildr = new ImageLoader();
-		private ValaGL.Core.Texture texture;
-
-		public void render(){
-			if(header.NumVertices != 119)
-				return;
-
-			// Mark the shape's VBO and IBO as current
-			mesh_vbo.make_current();
-			mesh_ibo.make_current();
-
-			
-			glActiveTexture(GL_TEXTURE0);
-			texture.make_current();
-			glUniform1i((GLint)viewer.uniforms["diffuse"], 0);
-
-			// Then render their contents
-			glDrawElements(
-				GL_TRIANGLES,
-				(GLsizei)(header.NumTris * 3), // number of indices
-				GL_UNSIGNED_SHORT, // format of each index
-				null
-			);
-		}
-		
-
-		private GLProgram viewer;
-
-		public void init_renderer(GLProgram viewer){
-			this.viewer = viewer;
-
-			if(header.NumVertices != 119){
-				return;
-			}
-
-			if(!ildr.load(EngineSettings.RootDir + "/avpaladin.dds")){
-				stderr.printf("Texture load failed\n");
-				return;
-			}
-			texture = ildr.get_frame();
-
-			// VBO (vertices)
-			BufferItem[] items = new BufferItem[header.NumVertices];
-			//Memory.set(items, 0x00, sizeof(BufferItem) * items.length);
-
-			for(uint i=0; i<header.NumVertices; i++){
-				items[i].position = vertices[i];
-				items[i].normal = vertices_normals[i];
-				items[i].texcoords = material_pass.texture_stage.texcoords[i];
-			}
-
-			stdout.printf("We have %u vertices\n", header.NumVertices);
-
-			try {
-				// Make a VBO and load data into it
-				mesh_vbo = new VBO((void *)items, sizeof(BufferItem) * items.length);
-			} catch(CoreError err){
-				stderr.printf("Failed to create VBO\n");
-			}
-			mesh_vbo.make_current();
-
-			//for offset calculation
-			BufferItem dummy = BufferItem();
-
-			/*
-			 * Specify the components we are passing through the buffer
-			 */
-			mesh_vbo.add_attribute(
-				0, //index
-				3, //number of vector components
-				GL_FLOAT, //type of elements
-				GL_FALSE, //values should not be normalized
-				sizeof(BufferItem), //distance to the next element
-				(uintptr)&dummy.position - (uintptr)&dummy //offset of the item
-			);
-
-			// Index 1 -> vertex normals
-			mesh_vbo.add_attribute(
-				1,
-				3,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(BufferItem),
-				(uintptr)&dummy.normal - (uintptr)&dummy
-			);
-
-			// Index 2 -> vertex texture coords
-			mesh_vbo.add_attribute(
-				2,
-				2,
-				GL_FLOAT,
-				GL_FALSE,
-				sizeof(BufferItem),
-				(uintptr)&dummy.texcoords - (uintptr)&dummy
-			);
-
-			// IBO (indices)
-			// Load triangles indices: each triangle has 3
-			GLushort[] indices = new GLushort[header.NumTris * 3];
-			uint i_tris = 0;
-			uint i_idx = 0;
-			
-			for(; i_idx<header.NumTris * 3; i_tris++){
-				// Process this triangle's indices
-				for(uint tris_idx=0; tris_idx<3; tris_idx++, i_idx++){
-					indices[i_idx] = (GLushort)triangles[i_tris].Vindex[tris_idx];
-				}
-			}
-
-			try {
-				mesh_ibo = new IBO((void *)indices, sizeof(GLushort) * indices.length * 3);
-			} catch(CoreError err){
-				stderr.printf("IBO creation failed\n");
-			}
-
-			mesh_ibo.make_current();
-		}
 
 		public MeshVisitor(StreamCursor cursor){
 			base(cursor);

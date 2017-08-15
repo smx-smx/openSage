@@ -5,6 +5,7 @@ using GLEW;
 using SDL;
 
 using OpenSage.Loaders;
+using OpenSage.Resources;
 
 namespace OpenSage {
 	public class MainWindow {
@@ -135,8 +136,8 @@ namespace OpenSage {
 				//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
 				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
 				if(data != null){
-					var m = new OpenSage.Resources.W3D.Model(data);
-					var r = new OpenSage.Resources.W3D.Renderer(m);
+					var m = new W3D.Model(data);
+					var r = new W3D.Renderer.ModelRenderer(m);
 				}
 			}
 			//Handler.SwitchState(GameState.NONE);

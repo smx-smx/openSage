@@ -9,9 +9,9 @@ using GL;
 using GLU;
 using ValaGL.Core;
 
-namespace OpenSage.Resources.W3D {
+namespace OpenSage.Resources.W3D.Renderer {
 
-public class Renderer {
+public class ModelRenderer {
 	public FrameProvider provider;
 	private GLProgram viewer;
 
@@ -23,7 +23,10 @@ public class Renderer {
 	private float angle = 0.0f;
 	private Camera camera;
 
-	public Renderer(Model model){
+	//MeshRenderers
+	private MeshRenderer[] mrs;
+
+	public ModelRenderer(Model model){
 		this.model = model;
 		this.init_renderer();
 		MainWindow.Handler.Chain(this.provider);
@@ -43,8 +46,8 @@ public class Renderer {
 		if(angle > 360.0f)
 			angle = 0.0f;
 
-		foreach(MeshVisitor mv in model.meshes){
-			if(mv.header.NumVertices != 119){
+		foreach(MeshRenderer mr in mrs){
+			if(mr.mesh.header.NumVertices != 119){
 				continue;
 			}
 			
@@ -68,7 +71,7 @@ public class Renderer {
 			);
 
 			camera.apply ((GLint)viewer.uniforms["mvp"], ref model_matrix);
-			mv.render();
+			mr.render();
 		}
 
 		provider.onFrameEnd();
@@ -105,8 +108,12 @@ public class Renderer {
 			100.0f
 		);
 
-		foreach(MeshVisitor mv in model.meshes){
-			mv.init_renderer(viewer);
+
+		//Init mesh renderers
+		uint nMeshes = model.meshes.length();
+		mrs = new MeshRenderer[nMeshes];
+		for(uint i=0; i<nMeshes; i++){
+			mrs[i] = new MeshRenderer(viewer, model.meshes.nth_data(i));
 		}
 
 		#if false
