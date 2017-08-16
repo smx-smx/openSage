@@ -5,12 +5,6 @@ using Vapi.W3D.Chunk;
 using Vapi.W3D.Mesh;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
-	private struct BufferItem {
-		Vector3 position;
-		Vector3 normal;
-		TextureCoordinates texcoords;
-	}
-
 	public class MeshVisitor : ChunkVisitor {
 		public Vapi.W3D.HTree.Hierarchy *hierarchy;
 		

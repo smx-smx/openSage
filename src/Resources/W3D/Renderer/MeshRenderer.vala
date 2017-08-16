@@ -10,6 +10,12 @@ using ValaGL.Core;
 
 namespace OpenSage.Resources.W3D.Renderer {
 
+private struct BufferItem {
+	Vector3 position;
+	Vector3 normal;
+	TextureCoordinates texcoords;
+}
+
 public class MeshRenderer {
 	public MeshVisitor mesh;
 	private GLProgram viewer;
