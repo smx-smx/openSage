@@ -118,21 +118,11 @@ namespace OpenSage {
 			bool result;
 			bool run = true;
 
-			//Handler handler = new Handler();
-			Handler.SwitchState(GameState.SPLASH);
-			result = Handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
-			if(!result){
-				stderr.printf("Failed to open BMP\n");
-				run = false;
-			}
-			
 			// Right now, this is for ImageLoader (which isn't multithreaded)
 			Handler.onFrameStart.connect(clear);
 			Handler.onFrameEnd.connect(swap);
 			
 			Handler.update(); // Show Splash Screen
-						
-			Handler.SwitchState(GameState.SPLASH);			
 			
 			while(run){			
 				/* Do we have any texture to render? */
@@ -147,38 +137,50 @@ namespace OpenSage {
 				
 				Handler.render();
 
-				if(Handler.State == GameState.SPLASH){
-					stdout.printf("Showing the splash for a few seconds...\n");
-					//Posix.sleep(2);
-					
-					stdout.printf("Playing intro video...\n");
-					Handler.SwitchState(GameState.CINEMATIC);
-					result = Handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
-
-					Handler.onTextureReady.connect(onTexture);
-					
-					if(!result){
-						stderr.printf("Failed to load EA_LOGO.bik\n");
-						run = false;
-					}
-				} else if(Handler.State == GameState.CINEMATIC){
-					if(Handler.is_done()){
-						Handler.SwitchState(GameState.LOADING);
-
-						BigLoader b = new BigLoader();
-						result = b.load(EngineSettings.RootDir + "/W3DZH.big");
+				switch(Handler.State){
+					case GameState.NONE:							
+						Handler.SwitchState(GameState.SPLASH);
+						result = Handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
 						if(!result){
-							stderr.printf("Failed to load BIG file\n");
-						} else {
-							//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
-							uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
-							if(data != null){
-								var m = new W3D.Model(data);
-								var r = new W3D.Renderer.ModelRenderer(m);
+							stderr.printf("Failed to open BMP\n");
+							run = false;
+						}
+						break;
+					case GameState.SPLASH:
+						stdout.printf("Showing the splash for a few seconds...\n");
+						Posix.sleep(2);
+						
+						stdout.printf("Playing intro video...\n");
+						Handler.SwitchState(GameState.CINEMATIC);
+						result = Handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
+
+						Handler.onTextureReady.connect(onTexture);
+						
+						if(!result){
+							stderr.printf("Failed to load EA_LOGO.bik\n");
+							run = false;
+						}
+						break;
+					case GameState.CINEMATIC:
+						if(Handler.is_done()){
+							Handler.SwitchState(GameState.LOADING);
+
+							BigLoader b = new BigLoader();
+							result = b.load(EngineSettings.RootDir + "/W3DZH.big");
+							if(!result){
+								stderr.printf("Failed to load BIG file\n");
+							} else {
+								//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
+								uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
+								if(data != null){
+									var m = new W3D.Model(data);
+									var r = new W3D.Renderer.ModelRenderer(m);
+								}
 							}
 						}
-					}
+						break;
 				}
+				Handler.update();
 				
 				SDL.Event ev;
 				SDL.Event.poll(out ev);
