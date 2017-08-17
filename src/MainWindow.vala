@@ -114,6 +114,17 @@ namespace OpenSage {
 			SDL.quit();
 		}
 	
+		private void test_model(){
+			//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
+			uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
+			if(data != null){
+				var m = new W3D.Model(data);
+				var r = new W3D.Renderer.ModelRenderer(m);
+			}
+		}
+
+		private static bool SKIP_INTRO_TEST = true;
+
 		public void MainLoop(){
 			bool result;
 			bool run = true;
@@ -136,6 +147,9 @@ namespace OpenSage {
 				}
 				
 				Handler.render();
+
+				if(Handler.State < GameState.CINEMATIC && SKIP_INTRO_TEST)
+					Handler.JumpTo(GameState.CINEMATIC);
 
 				switch(Handler.State){
 					case GameState.NONE:							
@@ -162,19 +176,17 @@ namespace OpenSage {
 						}
 						break;
 					case GameState.CINEMATIC:
-						if(Handler.is_done()){
-							Handler.SwitchState(GameState.LOADING);
+						if(SKIP_INTRO_TEST){
+							Handler.JumpTo(GameState.LOADING);
+							test_model();
+						} else {
+							if(Handler.is_done()){
+								Handler.SwitchState(GameState.LOADING);
 
-							BigLoader b = new BigLoader();
-							result = b.load(EngineSettings.RootDir + "/W3DZH.big");
-							if(!result){
-								stderr.printf("Failed to load BIG file\n");
-							} else {
-								//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
-								uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
-								if(data != null){
-									var m = new W3D.Model(data);
-									var r = new W3D.Renderer.ModelRenderer(m);
+								BigLoader b = new BigLoader();
+								result = b.load(EngineSettings.RootDir + "/W3DZH.big");
+								if(!result){
+									stderr.printf("Failed to load BIG file\n");
 								}
 							}
 						}

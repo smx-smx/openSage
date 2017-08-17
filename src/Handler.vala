@@ -31,6 +31,10 @@ namespace OpenSage {
 			}
 		}
 		
+		public void JumpTo(GameState state){
+			this.State = state;
+		}
+
 		public void Chain(FrameProvider prv){
 			ChainEvents(prv, this);
 		}
