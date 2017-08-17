@@ -1,4 +1,5 @@
 using OpenSage.Loaders;
+using OpenSage.Loaders.AV;
 
 namespace OpenSage {
 	public enum GameState {
