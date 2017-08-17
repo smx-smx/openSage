@@ -271,5 +271,8 @@ namespace Av.Format
         public int read_frame (Codec.Packet packet);
         [CCode (cname = "av_seek_frame")]
         public int seek_frame(int stream_index, int64 timestamp, SeekFlag flags);
+		
+		[CCode(cname = "av_guess_sample_aspect_ratio")]
+		public Av.Util.Rational guess_sample_aspect_ratio(Stream stream, Av.Util.Frame? frame);
     }
 }

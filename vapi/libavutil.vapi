@@ -1,5 +1,10 @@
 namespace Av.Util
 {
+	/* Common */
+	[CCode(cname = "av_clip")]
+	public int clip(int a, int amin, int amax);
+	/* End Common */
+
     [CCode (cname = "AV_NOPTS_VALUE")]
     public const int64 NOPTS_VALUE;
 
@@ -12,6 +17,9 @@ namespace Av.Util
     [CCode (cname = "av_freep")]
     public void freep(void *ptr);
 
+	[CCode (cname = "av_fast_malloc")]
+	public void fast_malloc(void *ptr, out uint size, size_t min_size);
+	
     [CCode (cname = "int", cprefix = "AVERROR_", cheader_filename = "libavutil/error.h")]
     public enum Error
     {
@@ -215,6 +223,9 @@ namespace Av.Util
         DATA,
         SUBTITLE,
         ATTACHMENT;
+		
+		[CCode(cname = "AVMEDIA_TYPE_NB")]
+		public const int NB;
 
         [CCode (cname = "av_get_media_type_string")]
         public unowned string to_string ();
@@ -1032,5 +1043,20 @@ namespace Av.Util
         public static int get_channel_layout (void *obj, string name, SearchFlags search_flags, out ChannelLayout.Layout out_ch_layout);
         [CCode (cname = "av_opt_get_dict_val")]
         public static int get_dict_val (void *obj, string name, SearchFlags search_flags, out Dictionary out_val);
+    }
+
+    [CCode (cheader_filename = "libavutil/time.h")]
+    namespace Time {
+        [CCode(cname = "av_gettime")]
+        public int64 get();
+
+        [CCode(cname = "av_gettime_relative")]
+        public int64 get_relative();
+
+        [CCode(cname = "av_gettime_relative_is_monotonic")]
+        public bool relative_is_monotonic();
+
+        [CCode(cname = "av_usleep")]
+        public int usleep(uint usec);
     }
 }

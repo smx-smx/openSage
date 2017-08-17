@@ -500,9 +500,12 @@ namespace Av.Codec
 
         [CCode (cname = "av_init_packet")]
         public void init ();
-
+	
         [CCode (cname = "av_packet_unref")]
         public void unref ();
+		
+		[CCode(cname = "av_packet_move_ref")]
+		public static void move_ref(Packet dst, Packet src);
     }
 
     [CCode (cname = "int", cprefix = "FF_PROFILE_", cheader_filename = "libavcodec/avcodec.h")]
@@ -645,7 +648,7 @@ namespace Av.Codec
         public Util.ColorSpace                  color_space;
         public Util.ChromaLocation              chroma_location;
         public int                              video_delay;
-        public uint64                           channel_layout;
+        public Av.Util.ChannelLayout.Layout		channel_layout;
         public int                              channels;
         public int                              sample_rate;
         public int                              block_align;
@@ -1006,8 +1009,8 @@ namespace Av.Codec
         public int                  frame_number;
         public int                  block_align;
         public int                  cutoff;
-        public uint64               channel_layout;
-        public uint64               request_channel_layout;
+        public Av.Util.ChannelLayout.Layout channel_layout;
+        public Av.Util.ChannelLayout.Layout request_channel_layout;
         public AudioServiceType     audio_service_type;
         public Util.Sample.Format   request_sample_fmt;
         public int                  refcounted_frames;
@@ -1083,7 +1086,7 @@ namespace Av.Codec
 
         [CCode (cname = "avcodec_open2")]
         public int open (Codec? codec, out Util.Dictionary? dict);
-
+		
         [CCode (cname = "avcodec_send_packet")]
         public int send_packet (Packet packet);
 
@@ -1095,5 +1098,14 @@ namespace Av.Codec
 
         [CCode (cname = "avcodec_decode_audio4")]
         public int decode_audio(out Util.Frame frame, out int got_frame, Packet av_packet);
+		
+		[CCode (cname = "avcodec_flush_buffers")]
+		public void flush_buffers();
+		
+		[CCode(cname = "av_codec_get_pkt_timebase")]
+		public Av.Util.Rational get_pkt_timebase();
+		
+		[CCode(cname = "av_codec_set_pkt_timebase")]
+		public void set_pkt_timebase(Util.Rational val);
     }
 }

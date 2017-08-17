@@ -10,7 +10,14 @@ using SDL;
 
 using OpenSage.Support;
 namespace OpenSage.Loaders {
+	public struct QItem {
+		unowned Frame frame;
+		unowned Packet packet;
+	}
+
 	private class AudioFrameConsumer {
+		private unowned VideoPlayer player;
+
 		private unowned Av.Format.Context format_ctx;
 		private unowned Av.Codec.Context codec_ctx;
 		private unowned Sw.Resample.Context? swr_ctx;	// Audio Resampler
@@ -18,7 +25,7 @@ namespace OpenSage.Loaders {
 		
 		private AutoResetEvent bufferFinished = new AutoResetEvent(false);
 		
-		private unowned AsyncQueue<Frame?> queue;
+		private unowned AsyncQueue<QItem?> queue;
 		
 		// Audio device and buffer
 		Audio.AudioSpec audio_dev_spec = Audio.AudioSpec();
@@ -38,17 +45,17 @@ namespace OpenSage.Loaders {
 		private int audio_index;
 		
 		private Object clock_lock = null;
-		private int64 last_stamp = 0;
-				
-		public int64 audio_clock {
+		
+		private double clock_value = 0;
+		public double audio_clock {
 			get {
 				lock (clock_lock){
-					return last_stamp;
+					return clock_value;
 				}
 			}
 			set {
 				lock (clock_lock){
-					last_stamp = value;
+					clock_value = value;
 				}
 			}
 		}
@@ -57,12 +64,14 @@ namespace OpenSage.Loaders {
 		
 		
 		public AudioFrameConsumer(
+			VideoPlayer player,
 			Cancellable cts,
 			Av.Format.Context format_ctx,
 			Av.Codec.Context codec_ctx,
 			int audio_index,
-			AsyncQueue<Frame?> queue
+			AsyncQueue<QItem?> queue
 		){
+			this.player = player;
 			this.cts = cts;
 			this.format_ctx = format_ctx;
 			this.codec_ctx = codec_ctx;
@@ -163,31 +172,45 @@ namespace OpenSage.Loaders {
 			//stdout.printf("AudioBuf remaining: %u\n", remaining_length);
 		}
 		
-		public bool renderFrame(Frame *frame){				
+		public bool renderFrame(QItem item){
 			bufferFinished.wait();
-			
-			int64 pts = frame->best_effort_timestamp;
+
+			unowned Frame frame = item.frame;
+
+			double pts = 0;
+			if(item.packet.dts != NOPTS_VALUE){
+				pts = item.packet.dts;
+			} else {
+				pts = item.frame.best_effort_timestamp;
+			}
+
 			if(pts == NOPTS_VALUE){
 				stdout.printf("NO AUDIO PTS!!!\n");
+				return false;
 			}
-			Mathematics.rescale_q(
-				pts,
-				format_ctx.streams[audio_index].time_base,
-				TIME_BASE_Q
-			);
-			
+		
 			/*if(pts > last_stamp){
 				uint delta = (uint)(pts - last_stamp) * 1000;
 				Posix.usleep(delta);
 			}*/
-			audio_clock = pts;
+			
+
+
+			/*pts = Mathematics.rescale_q(
+				(int64)pts,
+				format_ctx.streams[audio_index].time_base,
+				TIME_BASE_Q
+			);*/
+
+			
+			player.audioReady.set();
 			
 			Av.Util.freep(&audio_buf);
 			if(Sample.Samples.alloc(
 				out audio_buf,
 				null,
 				audio_out_layout.nb_channels(),
-				frame->nb_samples,
+				frame.nb_samples,
 				audio_out_format,
 				0
 			) < 0){
@@ -197,15 +220,25 @@ namespace OpenSage.Loaders {
 			
 			if(swr_ctx.convert(
 				(uint8 **)&audio_buf,
-				frame->nb_samples,
-				frame->data,
-				frame->nb_samples
+				frame.nb_samples,
+				frame.data,
+				frame.nb_samples
 			) < 0){
 				stderr.printf("Failed to resample audio\n");
 				return false;
 			}
 					
-			int buf_length = frame->nb_samples *
+			if(pts != NOPTS_VALUE){
+				/*pts = Mathematics.rescale_q(
+					(int64)pts,
+					format_ctx.streams[audio_index].time_base,
+					TIME_BASE_Q
+				);*/
+
+				audio_clock = format_ctx.streams[audio_index].time_base.q2d() * pts;
+			}
+
+			int buf_length = frame.nb_samples *
 				audio_out_layout.nb_channels() *
 				audio_out_format.get_bytes_per_sample();
 			
@@ -220,16 +253,18 @@ namespace OpenSage.Loaders {
 		
 		public void* run(){
 			while(should_run){
-				Frame *frame = queue.try_pop();
-				if(frame == null){
+				QItem? item = queue.try_pop();
+				if(item == null){
 					bufferFinished.wait();
 					dev.pause(true);
 					break;
 				}
 
+				audio_clock += (double)item.frame.nb_samples /
+							   (double)format_ctx.streams[audio_index].codecpar.sample_rate;
+
 				//stdout.printf("Audio Frame @ %p\n", frame);
-				renderFrame(frame);
-				delete frame;
+				renderFrame(item);
 			}
 			return null;
 		}
@@ -243,7 +278,7 @@ namespace OpenSage.Loaders {
 		private unowned Av.Codec.Context codec_ctx;
 		private Cancellable cts;
 		
-		private unowned AsyncQueue<Frame?> queue;
+		private unowned AsyncQueue<QItem?> queue;
 		
 		private const int MAXQ_SIZE = 15;
 		public AutoResetEvent slot_available = new AutoResetEvent(true);
@@ -256,22 +291,26 @@ namespace OpenSage.Loaders {
 		private int video_index;
 		
 		private Object clock_lock = null;
-		private int64 last_stamp = 0;
-				
-		public int64 video_clock {
+		
+		private double clock_value = 0;
+		public double video_clock {
 			get {
 				lock (clock_lock){
-					return last_stamp;
+					return clock_value;
 				}
 			}
 			set {
 				lock (clock_lock){
-					last_stamp = value;
+					clock_value = value;
 				}
 			}
 		}
 		
+		private QItem? currentItem = null;
+
 		private bool should_run = true;
+
+		private AutoResetEvent show_frame = new AutoResetEvent(false);
 		
 		public VideoFrameConsumer(
 			VideoPlayer player,
@@ -279,7 +318,7 @@ namespace OpenSage.Loaders {
 			Av.Format.Context format_ctx,
 			Av.Codec.Context codec_ctx,
 			int video_index,
-			AsyncQueue<Frame?> queue
+			AsyncQueue<QItem?> queue
 		){
 			this.player = player;
 			this.cts = cts;
@@ -327,11 +366,74 @@ namespace OpenSage.Loaders {
 				null
 			);
 		}
+
+		private double synchronize_video(Frame frame, double pts){
+			if(pts != 0){			
+				video_clock = pts;
+			} else {
+				pts = video_clock;
+			}
+
+			double frame_delay = format_ctx.streams[video_index].time_base.q2d();
+			frame_delay += frame.repeat_pict * (frame_delay * 0.5);
+			video_clock += frame_delay;
+
+			return pts;
+		}
 		
-		public bool renderFrame(Frame *frame){		
+		public bool renderFrame(QItem item){
+			double pts = 0;
+			if(item.packet.dts != NOPTS_VALUE){
+				pts = item.packet.dts;
+			} else {
+				pts = item.frame.best_effort_timestamp;
+			}
+			
+			/*pts = Mathematics.rescale_q(
+				(int64)pts,
+				format_ctx.streams[video_index].time_base,
+				TIME_BASE_Q
+			);*/
+
+			pts *= format_ctx.streams[video_index].time_base.q2d();
+
+			if(pts == NOPTS_VALUE){
+				stdout.printf("NO VIDEO PTS!!!\n");
+				return false;
+			}
+
+			/*pts = Mathematics.rescale_q(
+				(int64)pts,
+				format_ctx.streams[video_index].time_base,
+				TIME_BASE_Q
+			);*/
+
+			//delete item->packet;
+
+			pts = synchronize_video(item.frame, pts);
+
+			/* Make sure audio is not behind */
+			/*if(pts >= player.audio_clock){
+				player.audioReady.wait();
+			}*/
+
+			stdout.printf("aud: %llu\nvid: %llu\n",
+				(int64)player.audio_clock,
+				(int64)player.video_clock
+			);
+
+			if(pts >= player.audio_clock){
+				GLib.Thread.usleep(10 * 1000);
+				return false;
+			}
+
+			double audclk = player.audio_clock;
+
+			unowned Frame frame = item.frame;
+
 			if(scale_ctx.scale(
-				frame->data,
-				frame->linesize,
+				frame.data,
+				frame.linesize,
 				0,
 				codec_ctx.height,
 				frame_rgb.data,
@@ -340,6 +442,7 @@ namespace OpenSage.Loaders {
 				stderr.printf("sws_scale failed\n");
 				return false;
 			}
+
 			
 			// We now have a scaled texture. Send a copy of the buffer
 			// to the render queue
@@ -347,50 +450,31 @@ namespace OpenSage.Loaders {
 				codec_ctx.width, codec_ctx.height,
 				m_buf.copy()
 			);
-					
-			int64 pts = frame->best_effort_timestamp;
-			if(pts == NOPTS_VALUE){
-				stdout.printf("NO VIDEO PTS!!!\n");
-			}
-			Mathematics.rescale_q(
-				pts,
-				format_ctx.streams[video_index].time_base,
-				TIME_BASE_Q
-			);
-			
-			uint sync_delta = 0;
 
-			//stdout.printf("delay %u, frameDuration %.2f\n", (uint)delay, frameDuration);
-			if(pts > last_stamp){
-							
-				int64 audio_clock = player.audio_clock;
-				
-				// If audio is ahead of us, speed up the video (sleep less)
-				if(player.audio_clock > last_stamp){
-					sync_delta = (uint)(audio_clock - last_stamp);
-				}
-				
-				uint delta = (uint)((pts - last_stamp) * 1000) - sync_delta;
-				Posix.usleep(delta);
-			}
-			last_stamp = pts;
-			
+			//double delay = format_ctx.streams[video_index].time_base.q2d();
+			//delay += frame->repeat_pict * (delay * 0.5);
+			//stdout.printf("Delay: %u\n", (uint)delay);
+	
 			//stdout.printf("Sync delta: %u\n", sync_delta);
 			return true;
 		}
 		
 		public void* run(){
-			while(should_run){
-				Frame *frame = queue.try_pop ();
-				if(queue.length() < MAXQ_SIZE)
-					slot_available.set();
+			bool fetch_next = true;
+			QItem? current_item = null;
 
-				if(frame == null)
+			while(should_run){
+				if(fetch_next){
+					current_item = queue.try_pop ();
+					if(queue.length() < MAXQ_SIZE)
+						slot_available.set();
+				}
+
+				if(current_item == null)
 					break;
 
 				//stdout.printf("Video Frame @ %p\n", frame);
-				renderFrame(frame);
-				delete frame;
+				fetch_next = renderFrame(current_item);
 			}
 			return null;		
 		}
@@ -400,8 +484,8 @@ namespace OpenSage.Loaders {
 		private const int VIDEO_QUEUE_SIZE = 100;
 		private const int AUDIO_QUEUE_SIZE = 100;
 		
-		private unowned AsyncQueue<Frame *> videoFrameQ;
-		private unowned AsyncQueue<Frame *> audioFrameQ;
+		private unowned AsyncQueue<QItem?> videoFrameQ;
+		private unowned AsyncQueue<QItem?> audioFrameQ;
 		
 		private AutoResetEvent videoQEmpty = new AutoResetEvent(true);
 		private AutoResetEvent audioQEmpty = new AutoResetEvent(true);
@@ -421,18 +505,20 @@ namespace OpenSage.Loaders {
 		// Consumer Threads
 		private GLib.Thread<void *> videoThread;
 		private GLib.Thread<void *> audioThread;
+
+		public AutoResetEvent audioReady = new AutoResetEvent(true);
 		
 		//private Cancellable player_cts = new Cancellable();
 		private Cancellable video_cts = new Cancellable();
 		private Cancellable audio_cts = new Cancellable();
 		
-		public int64 audio_clock {
+		public double audio_clock {
 			get {
 				return aud_task.audio_clock;
 			}
 		}
 		
-		public int64 video_clock {
+		public double video_clock {
 			get {
 				return vid_task.video_clock;
 			}
@@ -443,11 +529,11 @@ namespace OpenSage.Loaders {
 		public VideoPlayer(
 			Av.Format.Context format_ctx,
 			
-			AsyncQueue<Frame *> videoFrameQ,
+			AsyncQueue<QItem?> videoFrameQ,
 			Av.Codec.Context video_codec_ctx,
 			int video_index,
 			
-			AsyncQueue<Frame *> audioFrameQ,
+			AsyncQueue<QItem?> audioFrameQ,
 			Av.Codec.Context audio_codec_ctx,
 			int audio_index
 		){
@@ -467,6 +553,7 @@ namespace OpenSage.Loaders {
 			
 			// Audio frame consumer
 			aud_task = new AudioFrameConsumer(
+				this,
 				audio_cts,
 				format_ctx,
 				audio_codec_ctx,
@@ -495,7 +582,7 @@ namespace OpenSage.Loaders {
 		private bool processCodecPacket(
 			Av.Codec.Context codec_ctx,
 			Av.Codec.Packet packet,
-			AsyncQueue<Frame *>queue
+			AsyncQueue<QItem?> queue
 		){
 			//stdout.printf("Packet Size: %u\n", packet.size);
 			int ret = codec_ctx.send_packet(packet);
@@ -512,7 +599,11 @@ namespace OpenSage.Loaders {
 				ret = codec_ctx.receive_frame(frame);
 				if(ret < 0 && ret != Av.Util.Error.EOF)
 					return false;
-				queue.push(frame);
+
+				QItem item = QItem();
+				item.frame = frame;
+				item.packet = packet;
+				queue.push(item);
 			}
 			
 			return true;
@@ -557,8 +648,8 @@ namespace OpenSage.Loaders {
 	}
 	
 	public class VideoLoader : FrameProvider {
-			private AsyncQueue<Frame *> videoFrameQ = new AsyncQueue<Frame *>();
-			private AsyncQueue<Frame *> audioFrameQ = new AsyncQueue<Frame *>();
+			private AsyncQueue<QItem?> videoFrameQ = new AsyncQueue<QItem?>();
+			private AsyncQueue<QItem?> audioFrameQ = new AsyncQueue<QItem?>();
 		
 			private unowned Av.Format.Context? format_ctx;	// Demuxer
 			private Av.Codec.Context? video_codec_ctx;		// Video Decoder

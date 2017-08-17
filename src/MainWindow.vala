@@ -164,7 +164,7 @@ namespace OpenSage {
 
 				if(Handler.State == GameState.SPLASH){
 					stdout.printf("Showing the splash for a few seconds...\n");
-					Posix.sleep(2);
+					//Posix.sleep(2);
 					
 					stdout.printf("Playing intro video...\n");
 					Handler.SwitchState(GameState.CINEMATIC);
