@@ -131,22 +131,7 @@ namespace OpenSage {
 			Handler.onFrameEnd.connect(swap);
 			
 			Handler.update(); // Show Splash Screen
-			
-			#if false
-			BigLoader b = new BigLoader();
-			result = b.load(EngineSettings.RootDir + "/W3DZH.big");
-			if(!result){
-				stderr.printf("Failed to load BIG file\n");
-			} else {
-				//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
-				uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
-				if(data != null){
-					var m = new W3D.Model(data);
-					var r = new W3D.Renderer.ModelRenderer(m);
-				}
-			}
-			#endif
-			
+						
 			Handler.SwitchState(GameState.SPLASH);			
 			
 			while(run){			
@@ -169,12 +154,29 @@ namespace OpenSage {
 					stdout.printf("Playing intro video...\n");
 					Handler.SwitchState(GameState.CINEMATIC);
 					result = Handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
-					
+
 					Handler.onTextureReady.connect(onTexture);
 					
 					if(!result){
 						stderr.printf("Failed to load EA_LOGO.bik\n");
 						run = false;
+					}
+				} else if(Handler.State == GameState.CINEMATIC){
+					if(Handler.is_done()){
+						Handler.SwitchState(GameState.LOADING);
+
+						BigLoader b = new BigLoader();
+						result = b.load(EngineSettings.RootDir + "/W3DZH.big");
+						if(!result){
+							stderr.printf("Failed to load BIG file\n");
+						} else {
+							//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
+							uint8[]? data = Utils.file_get_contents(EngineSettings.RootDir + "/avPaladin.W3D");
+							if(data != null){
+								var m = new W3D.Model(data);
+								var r = new W3D.Renderer.ModelRenderer(m);
+							}
+						}
 					}
 				}
 				

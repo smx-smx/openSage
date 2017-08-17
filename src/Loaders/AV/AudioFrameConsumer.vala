@@ -253,6 +253,7 @@ namespace OpenSage.Loaders.AV {
 				if(item == null){
 					bufferFinished.wait();
 					dev.pause(true);
+					player.playbackFinished.set();
 					break;
 				}
 

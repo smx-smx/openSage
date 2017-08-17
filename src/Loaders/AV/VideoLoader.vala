@@ -37,7 +37,12 @@ namespace OpenSage.Loaders.AV {
 			
 			~VideoLoader(){
 			}
-						
+			
+
+			public bool is_playing(){
+				return player.playbackFinished.is_signaled();	
+			}
+
 			public bool load(string url){
 				int err = Av.Format.Context.open_input(out format_ctx, url, null, null);
 				if(err < 0){

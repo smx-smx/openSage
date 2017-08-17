@@ -22,6 +22,10 @@ public class ManualResetEvent {
 		signaled = false;
 		mutex.unlock();
 	}
+
+	public bool is_signaled(){
+		return signaled;
+	}
 	
 	public void wait(){
 		mutex.lock();

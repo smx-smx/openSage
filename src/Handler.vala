@@ -12,7 +12,7 @@ namespace OpenSage {
 
 	public class Handler : FrameProvider {
 		public GameState State {get; private set;}
-		private void *stageHandle;
+		public void *stageHandle;
 
 		public Handler(){
 			this.State = GameState.NONE;
@@ -62,6 +62,12 @@ namespace OpenSage {
 			}
 		}
 		
+		public bool is_done(){
+			if(State == GameState.CINEMATIC)
+				return ((VideoLoader *)stageHandle)->is_playing();
+			return true;
+		}
+
 		public void FreeStage(){
 			switch(this.State){
 				case GameState.SPLASH:

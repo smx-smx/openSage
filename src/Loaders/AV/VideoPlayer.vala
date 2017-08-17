@@ -10,7 +10,7 @@ using SDL;
 
 using OpenSage.Support;
 namespace OpenSage.Loaders.AV {
-	
+
 	public class VideoPlayer {	
 		private const int VIDEO_QUEUE_SIZE = 100;
 		private const int AUDIO_QUEUE_SIZE = 100;
@@ -42,6 +42,8 @@ namespace OpenSage.Loaders.AV {
 		//private Cancellable player_cts = new Cancellable();
 		private Cancellable video_cts = new Cancellable();
 		private Cancellable audio_cts = new Cancellable();
+
+		public ManualResetEvent playbackFinished = new ManualResetEvent(false);
 		
 		public double audio_clock {
 			get {
