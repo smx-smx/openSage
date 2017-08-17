@@ -46,11 +46,7 @@ public class ModelRenderer {
 		if(angle > 360.0f)
 			angle = 0.0f;
 
-		foreach(MeshRenderer mr in mrs){
-			if(mr.mesh.header.NumVertices != 119){
-				continue;
-			}
-			
+		foreach(MeshRenderer mr in mrs){		
 			Vec3 eye = Vec3.from_data (50.0f, 0.0f, 24.0f);
 			Vec3 center = Vec3.from_data (0.0f, 0.0f, 0.0f);
 			Vec3 up = Vec3.from_data (0.0f, 0.0f, 1.0f);

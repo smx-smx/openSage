@@ -32,9 +32,6 @@ public class MeshRenderer {
 	}
 
 	public void render(){
-		if(mesh.header.NumVertices != 119)
-			return;
-
 		// Mark the shape's VBO and IBO as current
 		mesh_vbo.make_current();
 		mesh_ibo.make_current();
@@ -54,10 +51,6 @@ public class MeshRenderer {
 	}
 
 	private void init_renderer(){
-		if(mesh.header.NumVertices != 119){
-			return;
-		}
-
 		if(!ildr.load(EngineSettings.RootDir + "/avpaladin.dds")){
 			stderr.printf("Texture load failed\n");
 			return;
@@ -88,8 +81,8 @@ public class MeshRenderer {
 		BufferItem dummy = BufferItem();
 
 		/*
-			* Specify the components we are passing through the buffer
-			*/
+		* Specify the components we are passing through the buffer
+		*/
 		mesh_vbo.add_attribute(
 			0, //index
 			3, //number of vector components
