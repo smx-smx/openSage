@@ -254,6 +254,7 @@ namespace OpenSage.Loaders.AV {
 					bufferFinished.wait();
 					dev.pause(true);
 					player.playbackFinished.set();
+					stderr.printf("=> AudioFrameConsumer exiting\n");
 					break;
 				}
 

@@ -210,8 +210,10 @@ namespace OpenSage.Loaders.AV {
 						slot_available.set();
 				}
 
-				if(current_item == null)
+				if(current_item == null || player.playbackFinished.is_signaled()){
+					stderr.printf("=> AudioFrameConsumer exiting\n");
 					break;
+				}
 
 				//stdout.printf("Video Frame @ %p\n", frame);
 				fetch_next = renderFrame(current_item);

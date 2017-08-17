@@ -81,6 +81,12 @@ namespace OpenSage.Loaders.AV {
 			this.audio_index = audio_index;
 		}
 
+		~VideoPlayer(){
+			audioThread.join();
+			videoThread.join();
+			playerThread.join();
+		}
+
 		public bool play(VideoLoader *loader){
 			playerThread = new GLib.Thread<void*>(null, this.run);
 			
@@ -168,6 +174,7 @@ namespace OpenSage.Loaders.AV {
 				int ret = format_ctx.read_frame(packet);
 				if(ret == Av.Util.Error.EOF){
 					should_run = false;
+					stderr.printf("=> PlayerThread exiting\n");
 					break;
 				}
 
