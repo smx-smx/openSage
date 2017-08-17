@@ -50,6 +50,7 @@ PACKAGES
 OPTIONS
     --disable-warnings
     --thread
+    -g
     ${valac_defines}
 CUSTOM_VAPIS
     ${vapi_list}
