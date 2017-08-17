@@ -24,6 +24,7 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 				case ChunkType.TEXTURE_NAME:
 					stdout.printf("[TEXTURE] => Texture Name\n");
 					texture_name = (string)(cursor.ptr);
+					cursor.skip(texture_name.length + 1);
 					return VisitorResult.OK;
 			}
 			return VisitorResult.UNKNOWN_DATA;
