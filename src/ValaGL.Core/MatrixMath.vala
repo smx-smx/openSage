@@ -192,6 +192,46 @@ public struct Vec4 {
 		data[2] = z;
 		data[3] = w;
 	}
+
+	public Mat4 to_mat4(){
+		float w, x, y, z;
+		float xx, yy, zz;
+		float xy, yz, xz;
+		float wx, wy, wz;
+
+		w = data[0];
+		x = data[1];
+		y = data[2];
+		z = data[3];
+
+		xx = 2.0f * x * x;   xy = 2.0f * x * y;   wx = 2.0f * w * x;
+		yy = 2.0f * y * y;   yz = 2.0f * y * z;   wy = 2.0f * w * y;
+		zz = 2.0f * z * z;   xz = 2.0f * x * z;   wz = 2.0f * w * z;
+
+
+		Mat4 dest = Mat4();
+		dest.data[0 * 4 + 0] = 1.0f - yy - zz;
+		dest.data[1 * 4 + 1] = 1.0f - xx - zz;
+		dest.data[2 * 4 + 2] = 1.0f - xx - yy;
+	  
+		dest.data[0 * 1 + 1] = xy + wz;
+		dest.data[1 * 4 + 2] = yz + wx;
+		dest.data[2 * 4 + 0] = xz + wy;
+	  
+		dest.data[1 * 4 + 0] = xy - wz;
+		dest.data[2 * 4 + 1] = yz - wx;
+		dest.data[0 * 4 + 2] = xz - wy;
+	  
+		dest.data[1 * 4 + 3] = 0.0f;
+		dest.data[0 * 4 + 3] = 0.0f;
+		dest.data[2 * 4 + 3] = 0.0f;
+		dest.data[3 * 4 + 0] = 0.0f;
+		dest.data[3 * 4 + 1] = 0.0f;
+		dest.data[3 * 4 + 2] = 0.0f;
+		dest.data[3 * 4 + 3] = 1.0f;
+
+		return dest;
+	}
 	
 	/**
 	 * Creates a vector whose contents are the copy of the given array.

@@ -17,7 +17,6 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 		public VertexMaterialsVisitor vertex_materials;
 		public TexturesVisitor textures;
 		public MaterialPassVisitor material_pass;
-		public HLodVisitor hlod;
 
 		public MeshVisitor(StreamCursor cursor){
 			base(cursor);
@@ -43,7 +42,6 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 				case ChunkType.SHADERS:
 				case ChunkType.TEXTURES:
 				case ChunkType.MATERIAL_PASS:
-				case ChunkType.HLOD:
 					return true;
 				default:
 					return false;
@@ -113,10 +111,6 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 					stdout.printf("[MESH] => Material Pass\n");
 					material_pass = new MaterialPassVisitor(cursor);
 					return material_pass.run();
-				case ChunkType.HLOD:
-					stdout.printf("[MODEL] => HLod\n");
-					hlod = new HLodVisitor(cursor);
-					return hlod.run();
 
 			}
 			return VisitorResult.UNKNOWN_DATA;

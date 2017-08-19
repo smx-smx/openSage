@@ -4,7 +4,6 @@ layout (location=1)in vec3 in_normal;
 layout (location=2)in vec2 in_txcoord;
 
 uniform mat4 mvp;
-uniform float t;
 
 out vec4 out_normal;
 out vec2 out_txcoord;

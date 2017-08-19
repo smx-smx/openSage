@@ -10,22 +10,15 @@ using GLU;
 using ValaGL.Core;
 
 namespace OpenSage.Resources.W3D {
-	private struct Bone {
-		uint32 parent;
-		Vec3 angle;
-		Vec3 transform;
-		Vec4 rotation; //quaternion rotation
-	}
 
 	public class Model : ChunkVisitor {
 		private unowned uint8[] data;
 
 		public HierarchyVisitor hierarchy;
 		public AnimationVisitor animation;
+		public HLodVisitor hlod;
 		
 		public List<MeshVisitor> meshes = new List<MeshVisitor>();
-
-		private Bone[] bones;
 
 		public Model(uint8[] data){
 			StreamCursor cursor = new StreamCursor(data);
@@ -57,6 +50,7 @@ namespace OpenSage.Resources.W3D {
 				case ChunkType.LIGHTSCAPE:
 				case ChunkType.DAZZLE:
 				case ChunkType.SOUNDROBJ:
+				case ChunkType.HLOD:
 					return true;
 				default:
 					return false;
@@ -126,6 +120,10 @@ namespace OpenSage.Resources.W3D {
 				case ChunkType.SOUNDROBJ:
 					stdout.printf("[MODEL] => Sound RObject\n");
 					break;
+				case ChunkType.HLOD:
+					stdout.printf("[MESH] => HLod\n");
+					hlod = new HLodVisitor(cursor);
+					return hlod.run();
 			}
 			return VisitorResult.UNKNOWN_DATA;
 		}

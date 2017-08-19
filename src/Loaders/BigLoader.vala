@@ -2,6 +2,8 @@ using Gee;
 using MFile;
 using Builtins;
 
+using OpenSage;
+
 namespace OpenSage.Loaders {
 	private struct BigEntry {
 		uint32 offset;
@@ -34,9 +36,7 @@ namespace OpenSage.Loaders {
 		const string BIG_MAGIC2 = "BIG4";
 
 		public static BigHeader? import(BigHeader *data){
-			char[] _magic = data.magic;
-			string magic = (string)_magic;
-			magic.data[4] = 0x00;
+			string magic = Utils.chars_to_string(data.magic);
 
 			if(magic != BIG_MAGIC1 && magic != BIG_MAGIC2){
 				stderr.printf("'%s' is not a valid BIG magic\n", magic);

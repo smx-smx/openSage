@@ -1,9 +1,10 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
+using Vapi.W3D.HLod;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class HLodVisitor : ChunkVisitor {
-
+		public HLodHeaderStruct *header;
 		public HLodArrayVisitor lod_array;
 
 		public HLodVisitor(StreamCursor cursor){
@@ -25,6 +26,8 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 			switch(hdr.ChunkType){
 				case ChunkType.HLOD_HEADER:
 					stdout.printf("[HLOD] => Header\n");
+					header = (HLodHeaderStruct *)(cursor.ptr);
+					cursor.skip((long)sizeof(HLodHeaderStruct));
 					return VisitorResult.OK;
 				case ChunkType.HLOD_LOD_ARRAY:
 					stdout.printf("[HLOD] => Lod Array\n");

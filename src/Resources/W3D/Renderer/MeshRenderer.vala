@@ -1,12 +1,15 @@
+using OpenSage;
 using OpenSage.Loaders;
 using OpenSage.Support;
 using OpenSage.Resources.W3D.ChunkVisitors;
 
 using Vapi.W3D;
 using Vapi.W3D.Chunk;
+using Vapi.W3D.HLod;
 
 using GL;
 using ValaGL.Core;
+
 
 namespace OpenSage.Resources.W3D.Renderer {
 
@@ -23,25 +26,48 @@ public class MeshRenderer {
 	private VBO mesh_vbo;
 	private IBO mesh_ibo;
 	private ImageLoader ildr = new ImageLoader();
-	private ValaGL.Core.Texture texture;
+	public ValaGL.Core.Texture texture;
+
+	public unowned Pivot? pivot = null;
+
+	public bool is_skinned = false;
+
+	public int pivot_idx = -1;
+	public string object_name;
+
+	/* container.mesh, e.g AVPALADIN.CHASSIS */
+	private string get_object_name(){
+		string containerName = OpenSage.Utils.chars_to_string(mesh.header.ContainerName);
+		string meshName = OpenSage.Utils.chars_to_string(mesh.header.MeshName);
+		return containerName + "." + meshName;
+	}
 
 	public MeshRenderer(GLProgram viewer, MeshVisitor mv){
 		this.viewer = viewer;
 		this.mesh = mv;
 		this.init_renderer();
+
+		this.object_name = get_object_name();
+		if(MeshFlags.SKIN in mesh.header.Attributes){
+			stdout.printf("!!Skinned = true!!\n");
+			is_skinned = true;
+		}
 	}
 
 	public void render(){
 		// Mark the shape's VBO and IBO as current
 		mesh_vbo.make_current();
 		mesh_ibo.make_current();
-
-		
+	
 		glActiveTexture(GL_TEXTURE0);
 		texture.make_current();
 		glUniform1i((GLint)viewer.uniforms["diffuse"], 0);
 
 		// Then render their contents
+		/*
+		 * null as last argument indicates indices
+		 * should be retrived from the current IBO
+		 * */
 		glDrawElements(
 			GL_TRIANGLES,
 			(GLsizei)(mesh.header.NumTris * 3), // number of indices
@@ -51,12 +77,6 @@ public class MeshRenderer {
 	}
 
 	private void init_renderer(){
-		if(!ildr.load(EngineSettings.RootDir + "/avpaladin.dds")){
-			stderr.printf("Texture load failed\n");
-			return;
-		}
-		texture = ildr.get_frame();
-
 		// VBO (vertices)
 		BufferItem[] items = new BufferItem[mesh.header.NumVertices];
 		//Memory.set(items, 0x00, sizeof(BufferItem) * items.length);
@@ -66,8 +86,6 @@ public class MeshRenderer {
 			items[i].normal = mesh.vertices_normals[i];
 			items[i].texcoords = mesh.material_pass.texture_stage.texcoords[i];
 		}
-
-		stdout.printf("We have %u vertices\n", mesh.header.NumVertices);
 
 		try {
 			// Make a VBO and load data into it

@@ -6,6 +6,7 @@ using SDL;
 
 using OpenSage.Loaders;
 using OpenSage.Resources;
+using OpenSage;
 
 namespace OpenSage {
 	public class MainWindow {
