@@ -28,7 +28,9 @@ pkg_check_modules(SWRESAMPLE REQUIRED libswresample)
 
 find_library(FREEIMAGE_LIBRARY freeimage)
 
-add_definitions(-Wno-discarded-qualifiers)
+if(CMAKE_COMPILER_IS_GNUCC)
+	add_definitions(-Wno-discarded-qualifiers)
+endif()
 
 file(GLOB_RECURSE source_list RELATIVE "${CMAKE_SOURCE_DIR}" "src/*.vala")
 file(GLOB_RECURSE vapi_list RELATIVE "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
@@ -50,7 +52,7 @@ PACKAGES
 OPTIONS
     --disable-warnings
     --thread
-    -g
+    #-g
     ${valac_defines}
 CUSTOM_VAPIS
     ${vapi_list}
@@ -93,7 +95,7 @@ include_directories(native/headers)
 include_directories(native/libmfile)
 
 set(opensage_libs
-	${GLIB2_LIBRARIES}
+    ${GLIB2_LIBRARIES}
     ${GIO2_LIBRARIES}
     ${GOBJECT2_LIBRARIES}
     ${GEE_LIBRARIES}
@@ -118,3 +120,51 @@ elseif(UNIX)
 endif()
 
 target_link_libraries(openSage ${opensage_libs})
+
+macro(build_cv2pdb)
+	set(CV2PDB_DIR ${CMAKE_SOURCE_DIR}/cv2pdb)
+	#set(CV2PDB_OUTDIR ${CV2PDB_DIR}/bin/${CMAKE_BUILD_TYPE})
+	set(CV2PDB_OUTDIR ${CV2PDB_DIR}/bin)
+	set(CV2PDB_EXE ${CV2PDB_OUTDIR}/cv2pdb${CMAKE_EXECUTABLE_SUFFIX})
+
+	# Create a build directory for cv2pdb
+	add_custom_target(cv2pdb-make-directory
+		ALL
+		COMMAND ${CMAKE_COMMAND} -E make_directory ${CV2PDB_OUTDIR}
+	)
+
+	add_custom_command(
+		DEPENDS cv2pdb-make-directory
+		OUTPUT ${CV2PDB_EXE}
+		COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CV2PDB_DIR}
+		COMMAND ${CMAKE_COMMAND} --build .
+		WORKING_DIRECTORY ${CV2PDB_OUTDIR}
+		COMMENT "Building cv2pdb"
+		VERBATIM
+	)
+
+	add_custom_target(cv2pdb ALL DEPENDS ${CV2PDB_EXE})
+endmacro()
+
+function(run_cv2pdb target exe)
+	
+	add_custom_command(
+		#OUTPUT ${exe}
+		TARGET openSage
+		POST_BUILD
+		COMMAND cmd //C ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunAsDev.bat ${CV2PDB_EXE} -C ${exe} ${exe}
+		COMMENT "Running cv2pdb for ${target}"
+		VERBATIM
+	)
+	
+	#add_custom_target(cv2pdb_${target} ALL DEPENDS ${exe})
+	
+endfunction()
+
+if(MINGW)
+		build_cv2pdb()
+		
+		#get_target_property(openSageExe openSage RUNTIME_OUTPUT_DIRECTORY)
+		#set(openSageExe "${openSageExe}/openSage${CMAKE_EXECUTABLE_SUFFIX}")
+		run_cv2pdb(openSage $<TARGET_FILE:openSage>)
+endif()

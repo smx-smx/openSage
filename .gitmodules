@@ -1,0 +1,3 @@
+[submodule "cv2pdb"]
+	path = cv2pdb
+	url = https://github.com/smx-smx/cv2pdb.git
