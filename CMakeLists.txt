@@ -150,7 +150,7 @@ function(run_cv2pdb target exe)
 	
 	add_custom_command(
 		#OUTPUT ${exe}
-		TARGET openSage
+		TARGET ${target}
 		POST_BUILD
 		COMMAND cmd //C ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunAsDev.bat ${CV2PDB_EXE} -C ${exe} ${exe}
 		COMMENT "Running cv2pdb for ${target}"
