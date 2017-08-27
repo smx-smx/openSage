@@ -3,8 +3,6 @@ using Vapi.W3D.Chunk;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class AnimationVisitor : ChunkVisitor {
-//		public unowned CGlm.Vector3[] channels;
-
 		public AnimationVisitor(StreamCursor cursor){
 			base(cursor);
 			base.setup(isKnown, visit);

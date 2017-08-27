@@ -484,7 +484,7 @@ namespace W3D.Chunk {
 		MAX
 	}
 
-	[Flags, CCode(cprefix = "W3D_MESH_FLAG_")]
+	[Flags, CCode(cname = "int", cprefix = "W3D_MESH_FLAG_")]
 	public enum MeshFlags {
 		NONE,
 		COLLISION_BOX,
@@ -549,7 +549,7 @@ namespace W3D.Mesh {
 	[CCode(cname = "W3dMeshHeader3Struct")]
 	public struct MeshHeader3 {
 		public uint32 Version;
-		public uint32 Attributes;
+		public W3D.Chunk.MeshFlags Attributes;
 		public char MeshName[W3D.NAME_LEN];
 		public char ContainerName[W3D.NAME_LEN];
 		public uint32 NumTris; // number of triangles

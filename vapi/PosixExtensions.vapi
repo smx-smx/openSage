@@ -3,5 +3,7 @@ namespace Posix {
 		[CCode(cname = "_IONBF")]
 		Unbuffered
 	}
-	public static int setvbuf (Posix.FILE stream, string? buffer, int mode, size_t size);
+	public int setvbuf (Posix.FILE stream, string? buffer, int mode, size_t size);
+	
+	public void* calloc(size_t num, size_t size);
 }

@@ -47,7 +47,7 @@ public class Camera : Object {
 		reset ();
 	}
 	
-	private void update () {
+	public void update () {
 		result_matrix = projection_matrix;
 		result_matrix.mul_mat (ref view_matrix);
 	}

@@ -2,6 +2,15 @@ using Posix;
 namespace OpenSage {
 
 public class Utils {
+    public static string chars_to_string(char[] chars){
+        char[] nchars = chars;
+        nchars.resize(chars.length + 1);
+        nchars[chars.length] = 0x00;
+
+        string str = (string)nchars;
+        return str;
+    }
+
 	public static void hexdump(uint8 *data, size_t size) {
         var builder = new StringBuilder.sized (16);
         var i = 0;

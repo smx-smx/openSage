@@ -37,6 +37,12 @@ public struct Vec3 {
 	public Vec3() {
 		
 	}
+
+	public string to_string(){
+		StringBuilder sb = new StringBuilder();
+		sb.append_printf("(%.6f, %.6f, %.6f)", x, y, z);
+		return sb.str;
+	}
 	
 	/**
 	 * Creates a vector whose contents are the copy of the given data.
@@ -153,6 +159,7 @@ public struct Vec3 {
 	 */
 	public GLfloat x {
 		get { return data[0]; }
+		set { data[0] = value; }
 	}
 	
 	/**
@@ -160,6 +167,7 @@ public struct Vec3 {
 	 */
 	public GLfloat y {
 		get { return data[1]; }
+		set { data[1] = value; }
 	}
 	
 	/**
@@ -167,6 +175,7 @@ public struct Vec3 {
 	 */
 	public GLfloat z {
 		get { return data[2]; }
+		set { data[2] = value; }
 	}
 }
 
@@ -191,6 +200,29 @@ public struct Vec4 {
 		data[1] = y;
 		data[2] = z;
 		data[3] = w;
+	}
+
+	public Mat4 to_mat4(){
+		float w, x, y, z;
+		float xx, yy, zz;
+		float xy, yz, xz;
+		float wx, wy, wz;
+
+		w = data[0];
+		x = data[1];
+		y = data[2];
+		z = data[3];
+
+		xx = 2.0f * x * x;   xy = 2.0f * x * y;   wx = 2.0f * w * x;
+		yy = 2.0f * y * y;   yz = 2.0f * y * z;   wy = 2.0f * w * y;
+		zz = 2.0f * z * z;   xz = 2.0f * x * z;   wz = 2.0f * w * z;
+
+		return Mat4.from_data (
+			1.0f - yy - zz	, xy - wz			, xz + wy			, 0.0f,
+			xy + wz		 	, 1.0f - xx - zz	, yz - wx			, 0.0f,
+			xz - wy		  	, yz + wx			, 1.0f - xx - yy	, 0.0f,
+			0.0f			, 0.0f				, 0.0f				, 1.0f
+		);
 	}
 	
 	/**
@@ -308,6 +340,7 @@ public struct Vec4 {
 	 */
 	public GLfloat x {
 		get { return data[0]; }
+		set { data[0] = value; }
 	}
 	
 	/**
@@ -315,6 +348,7 @@ public struct Vec4 {
 	 */
 	public GLfloat y {
 		get { return data[1]; }
+		set { data[1] = value; }
 	}
 	
 	/**
@@ -322,6 +356,7 @@ public struct Vec4 {
 	 */
 	public GLfloat z {
 		get { return data[2]; }
+		set { data[2] = value; }
 	}
 	
 	/**
@@ -329,6 +364,7 @@ public struct Vec4 {
 	 */
 	public GLfloat w {
 		get { return data[3]; }
+		set { data[3] = value; }
 	}
 }
 
@@ -540,6 +576,19 @@ public struct Mat4 {
 		
 	}
 	
+	public string to_string(){
+		StringBuilder sb = new StringBuilder("[\n");
+		for(int row=0; row<4; row++){
+			sb.append(" [");
+			for(int col=0; col<4; col++){
+				sb.append_printf("%.6f ", data[col * 4 + row]);
+			}
+			sb.append("]\n");
+		}
+		sb.append("]");
+		return sb.str;
+	}
+
 	/**
 	 * Creates a matrix whose contents are the copy of the given data.
 	 * Warning: the data are specified in column-first-index order, which is different from
@@ -549,6 +598,7 @@ public struct Mat4 {
 							GLfloat a21, GLfloat a22, GLfloat a23, GLfloat a24,
 							GLfloat a31, GLfloat a32, GLfloat a33, GLfloat a34,
 							GLfloat a41, GLfloat a42, GLfloat a43, GLfloat a44) {
+		//data 0 - 4 	col1
 		data[0]  = a11;
 		data[1]  = a21;
 		data[2]  = a31;

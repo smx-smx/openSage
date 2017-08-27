@@ -7,9 +7,11 @@ namespace OpenSage {
 			Posix.setvbuf(Posix.stdout, null, Posix.BufferMode.Unbuffered, 0);
 			Posix.setvbuf(Posix.stderr, null, Posix.BufferMode.Unbuffered, 0);
 
+			/*
 			#if MINGW
 			MingwExceptionHandler.init();
 			#endif
+			*/
 		
 			if (!Thread.supported ()) {
 				stderr.printf ("Cannot run without thread support.\n");

@@ -10,6 +10,12 @@ endif(CMAKE_BUILD_TYPE STREQUAL "")
 include(FindVala)
 include(UseVala)
 
+## Temporarly use in-tree build of vala
+#set(VALA_EXECUTABLE ${CMAKE_SOURCE_DIR}/vala/build/compiler/valac${CMAKE_EXECUTABLE_SUFFIX})
+#set(VALA_FLAGS
+#    --vapidir ${CMAKE_SOURCE_DIR}/vala/vapi
+#)
+
 find_package(Vala REQUIRED)
 find_package(OpenGL REQUIRED)
 
@@ -38,9 +44,12 @@ file(GLOB_RECURSE vapi_list RELATIVE "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
 message(STATUS "Found Sources: ${source_list}")
 message(STATUS "Found VAPIs: ${vapi_list}")
 
-set(valac_defines "")
+set(valac_flags
+	-D W3D_DEBUG
+)
+
 if(MINGW)
-	list(APPEND valac_defines -D MINGW)
+	list(APPEND valac_flags -D MINGW)
 endif()
 
 vala_precompile(VALA_C
@@ -53,7 +62,8 @@ OPTIONS
     --disable-warnings
     --thread
     #-g
-    ${valac_defines}
+    ${valac_flags}
+    ${VALA_FLAGS}
 CUSTOM_VAPIS
     ${vapi_list}
 GENERATE_VAPI
@@ -161,7 +171,7 @@ function(run_cv2pdb target exe)
 	
 endfunction()
 
-if(MINGW)
+if(MINGW AND PDB)
 		build_cv2pdb()
 		
 		#get_target_property(openSageExe openSage RUNTIME_OUTPUT_DIRECTORY)

@@ -1,8 +1,6 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
 
-using CGlm;
-
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TextureStageVisitor : ChunkVisitor {
 		public unowned TextureCoordinates[] texcoords;

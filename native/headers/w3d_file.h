@@ -1547,8 +1547,8 @@ typedef struct
 ********************************************************************************/
 
 #define W3D_CURRENT_AGGREGATE_VERSION			0x00010003
-#define MESH_PATH_ENTRIES						= 15;
-#define MESH_PATH_ENTRY_LEN						= (W3D_NAME_LEN * 2);
+#define MESH_PATH_ENTRIES						15
+#define MESH_PATH_ENTRY_LEN						(W3D_NAME_LEN * 2)
 
 typedef struct 
 {

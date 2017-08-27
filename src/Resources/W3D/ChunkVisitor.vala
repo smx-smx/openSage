@@ -77,8 +77,8 @@ namespace OpenSage.Resources.W3D {
 				ulong distance = cursor.position - pre_offset;
 				
 				/* 
-				 * Check if the visitor left something behind
-				 * Don't skip if the visitor didn't handle it
+				 * Check if the visitor left something behind or it read more than expected
+				 * Don't skip if the visitor didn't handle it (so we pass it to parent)
 				 */
 				if(!isRoot && result != VisitorResult.UNHANDLED_CHUNK){
 					if(distance < hdr.ChunkSize){
@@ -89,6 +89,10 @@ namespace OpenSage.Resources.W3D {
 						ulong remaining = maxSize - distance;
 						stderr.printf("WARNING: Skipping trailing %lu bytes (total: %lu)\n", remaining, maxSize);
 						cursor.skip((long)remaining);
+					} else if(distance > hdr.ChunkSize){
+						ulong extra = distance - hdr.ChunkSize;						
+						stderr.printf("WARNING: ChunkVisitor overflowed (%lu extra bytes)\n", extra);
+						cursor.seek((long)(pre_offset + hdr.ChunkSize), SeekType.SET);
 					}
 				}
 

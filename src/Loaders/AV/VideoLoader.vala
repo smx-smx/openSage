@@ -36,6 +36,7 @@ namespace OpenSage.Loaders.AV {
 			}
 			
 			~VideoLoader(){
+				
 			}
 			
 
