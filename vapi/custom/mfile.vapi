@@ -34,6 +34,9 @@ namespace MFile {
 		[CCode(cname = "mwriteat")]
 		public void write_at(off_t off, void* ptr, size_t size);
 
+		[CCode(cname = "mpath")]
+		public unowned string path();
+
 		[CCode(cname = "msize")]
 		public size_t size();
 

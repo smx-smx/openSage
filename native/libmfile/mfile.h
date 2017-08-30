@@ -22,6 +22,8 @@
 #define MFILE_ANON(size) \
 	mmap(0, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, 0, 0)
 
+/* Gets the path of the memory mapped file */
+#define mpath(mfile) mfile->path
 /* Gets the size of the memory mapped file */
 #define msize(mfile) mfile->statBuf.st_size
 /* Gets the data, casted to the type specified in the second argument */

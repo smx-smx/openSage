@@ -9,7 +9,11 @@ public class WndTokens {
 	public const char ARRAY_NEXT_EL = ',';
 
 	public static bool isToken(char ch){
-		return ch == ASSIGN || ch == EOS || ch == KEY_SETVAL || ch == ARRAY_NEXT_EL;
+		return
+			ch == ASSIGN ||
+			ch == EOS ||
+			ch == KEY_SETVAL ||
+			ch == ARRAY_NEXT_EL;
 	}
 }
 
@@ -194,7 +198,7 @@ public class WndFile {
 		}
 	}
 
-	private bool processBlock(owned string line){
+	private bool processLine(owned string line){
 		line = line.strip();
 		char last = line[line.length - 1];
 		if(WndTokens.isToken(last)){
@@ -211,7 +215,7 @@ public class WndFile {
 				//example: characters,
 				case WndTokens.ARRAY_NEXT_EL:
 					string assignment = readMultiLineAssignment(line);
-					if(!processBlock(assignment))
+					if(!processLine(assignment))
 						return false;
 					return true;
 			}
@@ -283,7 +287,7 @@ public class WndFile {
 		
 		while(offset < data.length){
 			string line = readLine();
-			if(!processBlock(line))
+			if(!processLine(line))
 				break;
 		}
 	}

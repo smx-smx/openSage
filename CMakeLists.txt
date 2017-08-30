@@ -3,6 +3,9 @@ list(APPEND CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake/vala
 )
 
+set(CMAKE_CXX_FLAGS_TEST "-Ofast")
+set(CMAKE_C_FLAGS_TEST "-Ofast -funroll-loops -fprefetch-loop-arrays -march=native")
+
 if(CMAKE_BUILD_TYPE STREQUAL "")
 	set(CMAKE_BUILD_TYPE "Debug")
 endif(CMAKE_BUILD_TYPE STREQUAL "")
@@ -39,10 +42,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
 endif()
 
 file(GLOB_RECURSE source_list RELATIVE "${CMAKE_SOURCE_DIR}" "src/*.vala")
-file(GLOB_RECURSE vapi_list RELATIVE "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
+file(GLOB_RECURSE VAPI_LIST "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
 
 message(STATUS "Found Sources: ${source_list}")
-message(STATUS "Found VAPIs: ${vapi_list}")
+message(STATUS "Found VAPIs: ${VAPI_LIST}")
 
 set(valac_flags
 	-D W3D_DEBUG
@@ -65,7 +68,7 @@ OPTIONS
     ${valac_flags}
     ${VALA_FLAGS}
 CUSTOM_VAPIS
-    ${vapi_list}
+    ${VAPI_LIST}
 GENERATE_VAPI
     openSage
 GENERATE_HEADER
@@ -178,3 +181,5 @@ if(MINGW AND PDB)
 		#set(openSageExe "${openSageExe}/openSage${CMAKE_EXECUTABLE_SUFFIX}")
 		run_cv2pdb(openSage $<TARGET_FILE:openSage>)
 endif()
+
+add_subdirectory(tools)

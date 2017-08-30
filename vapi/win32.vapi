@@ -137,4 +137,7 @@ namespace Vapi.Win32 {
 	
 	[CCode(cname = "Sleep")]
 	public VOID Sleep(DWORD dwMilliseconds);
+
+	[CCode(cname = "QueryPerformanceCounter")]
+	public BOOL QueryPerformanceCounter(out int64 t);
 }
