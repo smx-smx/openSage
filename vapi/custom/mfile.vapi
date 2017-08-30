@@ -19,6 +19,9 @@ namespace MFile {
 		[CCode(cname = "mfile_new")]
 		public MFILE();
 
+		[CCode(cname = "mclose")]
+		public int close();
+
 		[CCode(cname = "mopen")]
 		public static MFILE open(string path, int open_flags);
 		[CCode(cname = "mopen_private")]

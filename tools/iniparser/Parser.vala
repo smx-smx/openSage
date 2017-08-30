@@ -8,6 +8,7 @@ namespace OpenSage.Tools.IniParser {
 
 	public class IniTokens {
 		public const char COMMENT = ';';
+		public const char COMMENT2 = '/'; //repeated 2 times, //
 		public const char PREPROCESSOR = '#';
 		public const char ASSIGNMENT = '=';
 	}
@@ -69,6 +70,16 @@ namespace OpenSage.Tools.IniParser {
 			return -1;
 		}
 
+		public int index_of_space(int offset=0){
+			int s_pos = index_of_char(' ', offset);
+			int t_pos = index_of_char('\t', offset);
+			if(s_pos < 0)
+				return t_pos;
+			if(t_pos < 0)
+				return s_pos;
+			return int.min(s_pos, t_pos);
+		}
+
 		public string slice(int from, int to){
 			int size = to - from;
 			string str = (string)new char[size + 1];
@@ -112,8 +123,11 @@ namespace OpenSage.Tools.IniParser {
 	}
 
 	public class IniFile {
-		public MFILE *mf;
-		public unowned string data;
+		// This is technically owned,
+		// but we want to save having to copy the struct
+		// we will close the file manually in the destructor
+		public unowned MFILE mf;
+		public MemString data;
 		private int data_length;
 
 		public IniObject *curObject = null;
@@ -125,48 +139,45 @@ namespace OpenSage.Tools.IniParser {
 		public Parser parser;
 
 		public IniFile(
-			MFILE *mf,
+			MFILE *mfile,
 			Parser parser
 		){
 			this.parser = parser;
-			this.mf = mf;
+			this.mf = mfile;
 
-			unowned uint8[] buf = (uint8[])mf->data();
+			this.data = {
+				(char *)mf.data(),
+				(int)mf.size()
+			};
+			this.data_length = (int)mf.size();
+
+			/*unowned uint8[] buf = (uint8[])mf->data();
 			buf.length = (int)mf->size();
 			
 			this.data = (string)buf;
-			this.data_length = buf.length;
+			this.data_length = buf.length;*/
 
-			this.basedir = Path.get_dirname(mf->path());
+			this.basedir = Path.get_dirname(mf.path());
 		}
 
-		public string readToChar(char ch){
-			int end_offset = data.index_of_char(ch, offset);
-			string substr = data.substring(offset, end_offset - offset);
-			offset = end_offset + 1;
-			return substr;
+		~IniFile(){
+			mf.close();
 		}
-	
-		public void readAfter(IniFile f, char ch){
-			//while(data[offset++] != ch);
-			int end_offset = data.index_of_char(ch, offset);
-			offset = end_offset + 1;
-		}
-	
+
 		public MemString readLine(){
 			// Skip newlines directly
 			int end_offset = data.index_of_char('\n', offset);
 			if(end_offset < 0)
 				end_offset = data_length;
 
-			bool has_cr = data.data[end_offset - 1] == '\r';
+			bool has_cr = data.loc[end_offset - 1] == '\r';
 			if(has_cr){
 				end_offset--;
 			}
 
 			MemString str =
 				{
-					(char *)&data.data[offset],
+					(char *)&data.loc[offset],
 					end_offset - offset
 				};
 			offset = end_offset + 1;
@@ -177,11 +188,11 @@ namespace OpenSage.Tools.IniParser {
 
 		public bool processPreproc(
 			MemString line,
-			int offset = 0
+			int offset = 0 //offset of '#'
 		){
-			int next_space = line.index_of_char(' ');
+			int next_space = line.index_of_space();
 			//#[define....]
-			string preproc_func = line.slice(offset + 1, next_space).down();
+			string preproc_func = line.slice(offset + 1, next_space).strip().down();
 			int length_nonl = line.strlen_nonl();
 			switch(preproc_func){
 				case "define":
@@ -189,7 +200,7 @@ namespace OpenSage.Tools.IniParser {
 					//     next   def
 					int def_name_s = next_space + 1;
 					//stdout.printf("%.*s\n", line.size, line.loc);
-					int def_name_e = line.index_of_char(' ', def_name_s);
+					int def_name_e = line.index_of_space(def_name_s);
 					int def_data_s = def_name_e + 1;
 					int def_data_e = length_nonl;
 
@@ -198,20 +209,20 @@ namespace OpenSage.Tools.IniParser {
 
 					MemString defname =
 					{
-						(char *)&data.data[def_name_s],
+						(char *)&data.loc[def_name_s],
 						def_name_e - def_name_s
 					};
 
 					MemString defdata =
 					{
-						(char *)&data.data[def_data_s],
+						(char *)&data.loc[def_data_s],
 						def_data_e - def_data_s
 					};
 
-					stdout.printf("'%-25s' ==> '%.*s'\n",
+					/*stdout.printf("'%-25s' ==> '%.*s'\n",
 						defname.print_fmt(),
 						defdata.print_fmt()
-					);
+					);*/
 
 					parser.defines[defname] = defdata;
 					return true;
@@ -221,7 +232,7 @@ namespace OpenSage.Tools.IniParser {
 					int file_name_e = length_nonl - 1;
 					
 					string filename = line.slice(file_name_s, file_name_e);
-					stdout.printf("INCLUDE %s\n", filename);
+					//stdout.printf("INCLUDE %s\n", filename);
 					
 					parser.load_file(basedir + "/" + filename);
 					parser.parse();
@@ -307,7 +318,7 @@ namespace OpenSage.Tools.IniParser {
 				.replace("\t", " ")
 				.index_of_char(' ');*/
 			
-			int next_space = line.index_of_char(' ');
+			int next_space = line.index_of_space();
 			//stdout.printf("%s\n", line.print_fmt());
 
 			/*
@@ -320,30 +331,30 @@ namespace OpenSage.Tools.IniParser {
 			MemString? obj_name = null;
 
 			if(isSubObject || isGlobal){
-				int obj_name_s = (int)ptrdiff(line.loc, data.data) + offset;
+				int obj_name_s = (int)ptrdiff(line.loc, data.loc) + offset;
 				int obj_name_e = length_nonl;
 
 				obj_name =
 				{
-					(char *)&data.data[obj_name_s],
+					(char *)&data.loc[obj_name_s],
 					obj_name_e - offset
 				};
 			} else {
-				int type_name_s = (int)ptrdiff(line.loc, data.data) + offset;
+				int type_name_s = (int)ptrdiff(line.loc, data.loc) + offset;
 				int type_name_e = next_space;
 
 				type_name =
 				{
-					(char *)&data.data[type_name_s],
+					(char *)&data.loc[type_name_s],
 					type_name_e - offset
 				};
 
-				int obj_name_s  = (int)ptrdiff(line.loc, data.data) + next_space + 1;
+				int obj_name_s  = (int)ptrdiff(line.loc, data.loc) + next_space + 1;
 				int obj_name_e  = length_nonl;
 	
 				obj_name =
 				{
-					(char *)&data.data[obj_name_s],
+					(char *)&data.loc[obj_name_s],
 					obj_name_e - (next_space + 1)
 				};
 			}
@@ -446,6 +457,15 @@ namespace OpenSage.Tools.IniParser {
 					return true;
 			}
 
+			int comment2_pos = line.index_of_char(IniTokens.COMMENT2);
+			bool hasComment2 = comment2_pos >= 0 && line.loc[1] == IniTokens.COMMENT2;
+			if(hasComment2){
+				if(comment2_pos == 0)
+					return true;
+			
+				line.size -= line.size - (comment2_pos + 1) + 2;
+			}
+
 			//stdout.printf("[LINE] %.*s\n", line.size, line.loc);
 
 			int preproc_pos = line.index_of_char(IniTokens.PREPROCESSOR);
@@ -488,7 +508,7 @@ namespace OpenSage.Tools.IniParser {
 						 * Subobjects only have a name without type, so enter the subobject only
 						 * when there's no space in the line
 						 */
-						int space_pos = line.index_of_char(' ');
+						int space_pos = line.index_of_space();
 						if(space_pos < 0){
 							//stdout.printf("Enter subobject at %s\n", line.print_fmt());
 							//SubObject (Nuggets)
@@ -518,17 +538,17 @@ namespace OpenSage.Tools.IniParser {
 			int tok_off	   //offset of the assignment operator (can be '=' or ' ' for 'fake' subobjects)
 		){
 			MemString key = {
-				(char *)&data.data[ptrdiff(line.loc, data.data) + k_off],
+				(char *)&data.loc[ptrdiff(line.loc, data.loc) + k_off],
 				tok_off - k_off
 			};
 			key.trim();
 
 			
 			int length_nonl = line.strlen_nonl();
-			int vals_s = (int)ptrdiff(line.loc, data.data) + tok_off + 1;
+			int vals_s = (int)ptrdiff(line.loc, data.loc) + tok_off + 1;
 
 			MemString vals = {
-				(char *)&data.data[vals_s],
+				(char *)&data.loc[vals_s],
 				length_nonl - (tok_off + 1)
 			};
 			vals.trim();
@@ -540,15 +560,15 @@ namespace OpenSage.Tools.IniParser {
 			int next_space = -1;
 			int vals_off = 0;
 			while(true){
-				next_space = vals.index_of_char(' ', vals_off);
+				next_space = vals.index_of_space(vals_off);
 				if(next_space < 0)
 					break;
 				
-				int val_s = (int)ptrdiff(vals.loc, data.data) + vals_off;
-				int val_e = (int)ptrdiff(vals.loc, data.data) + next_space;
+				int val_s = (int)ptrdiff(vals.loc, data.loc) + vals_off;
+				int val_e = (int)ptrdiff(vals.loc, data.loc) + next_space;
 
 				MemString val = {
-					(char *)&data.data[val_s],
+					(char *)&data.loc[val_s],
 					val_e - val_s
 				};
 
@@ -603,7 +623,11 @@ namespace OpenSage.Tools.IniParser {
 		private IniObject* curObject = null;
 		public HashMap<MemString?, IniObject*> objects = new HashMap<MemString?, IniObject*>();
 
-		public Parser(MFILE *mf){
+		public Parser(MFILE mf){
+			/*
+			 * IniFile receives a copy of this parser, so that it can 
+			 * access the symbols and add files to be parsed (like included files)
+		 	 */
 			IniFile *f = new IniFile(
 				mf,
 				this
@@ -614,6 +638,7 @@ namespace OpenSage.Tools.IniParser {
 		public void parse(){
 			IniFile *f = files.poll();
 			f->parse();
+			delete f;
 		}
 
 		~Parser(){
@@ -621,8 +646,6 @@ namespace OpenSage.Tools.IniParser {
 			for(int i=0; i<nFiles; i++){
 				IniFile *f = files.poll();
 				if(f != null){
-					if(f->mf != null)
-						delete f->mf;
 					delete f;
 				}
 			}
@@ -630,19 +653,119 @@ namespace OpenSage.Tools.IniParser {
 
 	}
 
+	public delegate void OnFileFunc (string filePath);
+	
+
+	public struct ThreadArg {
+		string iniFile;
+		OnFileFunc func;
+
+		public void run(){
+			func(iniFile);
+		}
+	}
+
 	public class Program {
-		public static int main(string[] args){
-			Posix.setvbuf(Posix.stdout, null, Posix.BufferMode.Unbuffered, 0);
-			Posix.setvbuf(Posix.stderr, null, Posix.BufferMode.Unbuffered, 0);
+		private string[] args;
+		private string? dirBase = null;
+		const string OPTSTRING = "d:";
+
+
+		ThreadPool<ThreadArg?> pool;
+
+		private bool recurse_dir (File src, Cancellable? cancellable = null, OnFileFunc cb) throws GLib.Error {
+			string src_path = src.get_path ();
+			FileType src_type = src.query_file_type (FileQueryInfoFlags.NONE, cancellable);
+
+			if ( src_type == FileType.DIRECTORY ) {
+				FileEnumerator enumerator = src.enumerate_children (FileAttribute.STANDARD_NAME, FileQueryInfoFlags.NONE, cancellable);
+				for ( FileInfo? info = enumerator.next_file (cancellable) ; info != null ; info = enumerator.next_file (cancellable) ) {
+					recurse_dir (
+						GLib.File.new_for_path (GLib.Path.build_filename (src_path, info.get_name ())),
+						cancellable,
+						cb
+					);
+				}
+			} else if ( src_type == GLib.FileType.REGULAR ) {
+				//cb(src_path);
+				ThreadArg arg = {
+					src_path, cb
+				};
+				pool.add(arg);
+			}
+
+			return true;
+		}
+
+		private void parseOptions(string[] args){
+			int c;
+			while((c = Posix.getopt(args, Program.OPTSTRING)) > 0){
+				switch(c){
+					// Directory
+					case 'd':
+						dirBase =  Posix.optarg.down();
+						break;
+				}
+			}
+		}
+
+		private static void parseIni(string iniPath){
+			#if PROFILE
+			Posix.timeval pre = {};
+			Posix.timeval post = {};
+			pre.get_time_of_day();
+			#endif
+			
+			Parser p = Parser.from_file(iniPath);
+			p.parse();
+			
+			#if PROFILE
+			post.get_time_of_day();
+			ulong micros_pre = 1000000 * pre.tv_sec + pre.tv_usec;
+			ulong micros_post = 1000000 * post.tv_sec + post.tv_usec;
+			stdout.printf("=> Parsed %s\n  %llu microseconds\n", iniPath, (micros_post - micros_pre));
+			#endif
+		}
+
+		public Program(string[] args){
+			this.args = args;
+
+			pool = new ThreadPool<ThreadArg?>.with_owned_data((arg) => {
+				arg.run();
+			}, (int)get_num_processors(), true);
+		}
+
+		public int run(){
 			if(args.length < 2){
 				stderr.printf("Usage: %s [file.ini]\n", args[0]);
 				return 1;
 			}
-			string filename = args[1];
-			stdout.printf("=> Parsing %s\n", filename);
-			Parser p = Parser.from_file(filename);
-			p.parse();
+
+			parseOptions(args);
+
+			if(dirBase == null){
+				string filename = args[1];
+				parseIni(filename);
+			} else {
+				GLib.Cancellable? cancellable = null;
+
+				File dir = File.new_for_commandline_arg (dirBase);
+				FileType src_type = dir.query_file_type (FileQueryInfoFlags.NONE, cancellable);
+				if ( src_type != FileType.DIRECTORY ) {
+					stderr.printf("FATAL: '%s' is not a directory!\n", dirBase);
+					return 1;
+				}
+
+				recurse_dir(dir, null, parseIni);
+			}
+
 			return 0;
+		}
+
+		public static int main(string[] args){
+			Posix.setvbuf(Posix.stdout, null, Posix.BufferMode.Unbuffered, 0);
+			Posix.setvbuf(Posix.stderr, null, Posix.BufferMode.Unbuffered, 0);
+			return new Program(args).run();
 		}
 	}
 }
