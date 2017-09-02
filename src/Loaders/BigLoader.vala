@@ -99,7 +99,9 @@ namespace OpenSage.Loaders {
 		/*
 		 * Returns a R/O pointer to the specified file
 		 */
-		public unowned uint8[]? getFile(string name){
+		public unowned uint8[]? getFile(owned string name){
+			name = name.down(); //perform case insensitive search
+
 			if(!files.has_key(name))
 				return null;
 
