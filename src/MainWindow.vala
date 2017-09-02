@@ -18,14 +18,11 @@ namespace OpenSage {
 
 		private Video.Window window;
 		private Video.GL.Context context;
-
-		private EngineSettings settings;
-		
+	
 		private AsyncQueue<Texture?> TextureQueue = new AsyncQueue<Texture?>();
 		private GLEventHandler ghandler = new GLEventHandler();
 		
-		public MainWindow(EngineSettings settings){
-			this.settings = settings;
+		public MainWindow(){
 			if(!this.create()){
 				this.terminate();
 			}
@@ -86,8 +83,8 @@ namespace OpenSage {
 				"openSage",
 				Video.Window.POS_CENTERED,
 				Video.Window.POS_CENTERED,
-				EngineSettings.ScreenWidth,
-				EngineSettings.ScreenHeight,
+				Engine.Settings.ScreenWidth,
+				Engine.Settings.ScreenHeight,
 				Video.WindowFlags.OPENGL
 			);
 					
@@ -108,7 +105,7 @@ namespace OpenSage {
 			glDebugMessageCallback((GLDEBUGPROC)on_debug_message, null);
 			
 			glEnable (GL_DEPTH_TEST);
-			glViewport(0, 0, EngineSettings.ScreenWidth, EngineSettings.ScreenHeight);
+			glViewport(0, 0, Engine.Settings.ScreenWidth, Engine.Settings.ScreenHeight);
 			
 			return true;
 		}
@@ -118,23 +115,30 @@ namespace OpenSage {
 		}
 	
 		private MFILE model;
-		private BigLoader b = new BigLoader();
 
 		private void test_model(){
-			
-			//BigLoader b = new BigLoader();
-			bool result = b.load(EngineSettings.RootDir + "/W3DZH.big");
-			if(!result){
+			if(
+				// Load ZH Models and Textures
+				!Engine.BigLoader.load(Engine.Settings.RootDir + "/W3DZH.big") ||
+				!Engine.BigLoader.load(Engine.Settings.RootDir + "/TexturesZH.big") ||
+				// Load Generals Models and Textures (TODO: assuming path)
+				!Engine.BigLoader.load(Engine.Settings.RootDir + "/../Command and Conquer Generals/W3D.big") ||
+				!Engine.BigLoader.load(Engine.Settings.RootDir + "/../Command and Conquer Generals/Textures.big")
+			){
 				stderr.printf("Failed to load BIG file\n");
 			}
 
-			//unowned uint8[]? data = b.getFile("art/w3d/abbtcmdhq.w3d");
-			model = MFILE.open(EngineSettings.RootDir + "/avPaladin.W3D", Posix.O_RDONLY);
+			unowned uint8[]? data = Engine.BigLoader.getFile("art/w3d/avpaladin.w3d");
+			if(data == null){
+				stderr.printf("Cannot load model data\n");
+				return;
+			}
+			//model = MFILE.open(EngineSettings.RootDir + "/avPaladin.W3D", Posix.O_RDONLY);
 			//model = MFILE.open(EngineSettings.RootDir + "/12ABLT.W3D", Posix.O_RDONLY);
-			uint8* data = model.data();
+			//uint8* data = model.data();
 
 			unowned uint8[] buf = (uint8[])data;
-			buf.length = (int)model.size();
+			//buf.length = (int)model.size();
 
 			if(data != null){
 				var m = new W3D.Model(buf);
@@ -173,7 +177,7 @@ namespace OpenSage {
 				switch(Handler.State){
 					case GameState.NONE:							
 						Handler.SwitchState(GameState.SPLASH);
-						result = Handler.load(EngineSettings.RootDir + "/Install_Final.bmp");
+						result = Handler.load(Engine.Settings.RootDir + "/Install_Final.bmp");
 						if(!result){
 							stderr.printf("Failed to open BMP\n");
 							run = false;
@@ -185,7 +189,7 @@ namespace OpenSage {
 						
 						stdout.printf("Playing intro video...\n");
 						Handler.SwitchState(GameState.CINEMATIC);
-						result = Handler.load(EngineSettings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
+						result = Handler.load(Engine.Settings.RootDir + "/Data/English/Movies/EA_LOGO.BIK");
 
 						Handler.onTextureReady.connect(onTexture);
 						

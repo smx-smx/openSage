@@ -100,7 +100,6 @@ namespace FreeImage {
     public const uint FI_RGBA_BLUE_SHIFT;
     public const uint FI_RGBA_ALPHA_SHIFT;
 
-
     [CCode (cprefix = "FIF_",cname="FREE_IMAGE_FORMAT",type_id="FREE_IMAGE_FORMAT")]
     public enum Format {
        UNKNOWN = -1,
@@ -370,7 +369,7 @@ namespace FreeImage {
     
     [CCode (cname="FreeImage_LoadU")]
     public Bitmap load_unicode(Format fif, string filename, int flags = 0);
-    
+   
 //    [CCode (cname="FreeImage_LoadFromHandle")]
 //    public Bitmap load.from_handle(Format fif, FreeImageIO io, fi_handle handle, int flags = 0);
 
@@ -546,6 +545,19 @@ namespace FreeImage {
 //    bool FreeImage_JPEGCrop(const char *src_file, const char *dst_file, int left, int top, int right, int bottom);
 //    bool FreeImage_JPEGCropU(const wchar_t *src_file, const wchar_t *dst_file, int left, int top, int right, int bottom);
     
+    [Compact]
+    [CCode(cname = "FIMEMORY", free_function="FreeImage_CloseMemory")]
+    public class Memory {
+        [CCode(cname = "FreeImage_OpenMemory")]
+        public Memory(uint8[] buf);
+
+        [CCode(cname = "FreeImage_LoadFromMemory", instance_pos=1.9)]
+        public Bitmap load(Format fif, int flags=0);
+
+        [CCode(cname = "FreeImage_GetFileTypeFromMemory")]
+        public Format get_file_type(int size=0);
+    }
+
     [Compact]
     [CCode (cname="FIBITMAP", free_function="FreeImage_Unload")]
     public class Bitmap {

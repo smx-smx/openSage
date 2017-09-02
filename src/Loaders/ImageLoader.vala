@@ -4,26 +4,54 @@ using FreeImage;
 
 namespace OpenSage.Loaders {
 	public class ImageLoader : FrameProvider {
-		private static ValaGL.Core.Texture? LoadImage(string imagePath){
-			ValaGL.Core.Texture texture = new ValaGL.Core.Texture();
-			texture.make_current(GL_TEXTURE_2D);
+		private static Format get_type_file(string path){
+			return FreeImage.get_file_type(path, 0);
+		}
+		
+		public struct FIBitmap {
+			FreeImage.Memory* mem; //optional, if loading from memory
+			FreeImage.Bitmap* bmp;
+		}
 
-			FreeImage.get_file_type(imagePath, 0);
-
-			Format format = FreeImage.get_file_type(imagePath, 0);
-			if(format == -1){
-				stderr.printf("Couldn't find image %s\n", imagePath);
+		private static FIBitmap? load_file(string path, Format? format = null){
+			if(format == null)
+				format = get_type_file(path);
+			if(!checkFormat(format))
 				return null;
+			FIBitmap bmp = {null, FreeImage.load(format, path)};
+			return bmp;
+		}
+
+		private static FIBitmap? load_mem(uint8[] buf, Format? format = null){
+			FIBitmap fi_bmp = FIBitmap();
+			fi_bmp.mem = new FreeImage.Memory(buf);
+			
+			if(format == null)
+				format = fi_bmp.mem->get_file_type();
+			if(!checkFormat(format))
+				return null;
+
+			fi_bmp.bmp = fi_bmp.mem->load(format);
+			return fi_bmp;
+		}
+
+		private static bool checkFormat(Format format){
+			if(format == -1){
+				stderr.printf("Couldn't find image\n");
+				return false;
 			}
 
 			if(format == Format.UNKNOWN){
 				stderr.printf("Couldn't detect file type\n");
-				return null;
+				return false;
 			}
+			
+			return true;
+		}
 
+		private static ValaGL.Core.Texture? loadBitmap(Bitmap bmp){
 			Bitmap *bmp32;
 
-			Bitmap bmp = FreeImage.load(format, imagePath);
 			uint bpp = bmp.get_bpp();
 			if(bpp == 32){
 				bmp32 = bmp;
@@ -46,6 +74,9 @@ namespace OpenSage.Loaders {
 				FreeImage.FI_RGBA_BLUE_MASK,
 				false
 			);
+
+			ValaGL.Core.Texture texture = new ValaGL.Core.Texture();
+			texture.make_current(GL_TEXTURE_2D);
 
 			glTexImage2D(
 				GL_TEXTURE_2D,
@@ -83,6 +114,22 @@ namespace OpenSage.Loaders {
 			
 			return texture;
 		}
+
+		public static ValaGL.Core.Texture? LoadStream(uint8[] buf){
+			FIBitmap bmp = load_mem(buf);
+			delete bmp.mem;
+			
+			ValaGL.Core.Texture? texture = loadBitmap(bmp.bmp);
+			delete bmp.bmp;
+			return texture;
+		}
+
+		public static ValaGL.Core.Texture? LoadFile(string imagePath){
+			FIBitmap bmp = load_file(imagePath);
+			ValaGL.Core.Texture? texture = loadBitmap(bmp.bmp);
+			delete bmp.bmp;
+			return texture;
+		}
 			
 		public ValaGL.Core.Texture texture { get; private set; }
 		public ImageLoader(){
@@ -98,7 +145,7 @@ namespace OpenSage.Loaders {
 		}
 		
 		public bool load(string filename){
-			this.texture = LoadImage(filename);
+			this.texture = LoadFile(filename);
 			if(this.texture == null)
 				return false;
 			return true;

@@ -51,48 +51,22 @@ namespace OpenSage.Loaders {
 			return hdr;
 		}
 	}
-	
-	public class BigLoader {
-		private HashMap<string, BigEntry?> bigFiles = new HashMap<string, BigEntry?> ();
 
-		private MFILE bigFile;
-		
-		public BigLoader(){
-		}
-		
-		~BigLoader(){
-		}
-		
-		/*
-		 * Returns a R/O pointer to the specified file
-		 */
-		public unowned uint8[]? getFile(string name){
-			if(!bigFiles.has_key(name))
-				return null;
+	public class BigFile {
+		private MFILE mf;
 
-			BigEntry entry = bigFiles[name];
-			
-			uint8* data = bigFile.data();
-			
-			stdout.printf("Big: Reading %u bytes at @%x\n", entry.length, entry.offset);
-			
-			//unowned because we want a R/O pointer to it
-			unowned uint8[] buf = (uint8[])(data + entry.offset);
-			buf.length = (int)entry.length;
-			return buf;
-		}
-
-		public bool load(string path){
-			bigFile = MFILE.open(path, Posix.O_RDONLY);
-			uint8* data = bigFile.data();
+		private HashMap<string, BigEntry?> files = new HashMap<string, BigEntry?> ();
+		
+		public bool load(){		
+			uint8* data = mf.data();
 			if(data == null){
-				stderr.printf("Failed to open BIG file '%s'\n", path);
+				stderr.printf("Failed to open BIG file '%s'\n", mf.path());
 				return false;
 			}
 			
 			BigHeader? hdr = BigHeader.import((BigHeader *)data);
 			if(hdr == null){
-				stdout.printf("'%s' is not a valid BIG file\n", path);
+				stdout.printf("'%s' is not a valid BIG file\n", mf.path());
 				return false;
 			}
 							
@@ -108,13 +82,67 @@ namespace OpenSage.Loaders {
 				BigEntry entry = BigEntry.import(pEntry);
 				//stdout.printf("[%u] %s\n", i, entry.name);
 
-				bigFiles.set(entry.name, entry);
+				files.set(entry.name, entry);
 
 				offset += BigEntry.HeaderSize + entry.name.length + 1;
 			}
 
 			stdout.flush();			
 			
+			return true;
+		}
+
+		public BigFile(string path){
+			mf = MFILE.open(path, Posix.O_RDONLY);
+		}
+	
+		/*
+		 * Returns a R/O pointer to the specified file
+		 */
+		public unowned uint8[]? getFile(string name){
+			if(!files.has_key(name))
+				return null;
+
+			BigEntry entry = files[name];
+			
+			uint8* data = mf.data();
+			
+			stdout.printf("Big: Reading %u bytes at @%x\n", entry.length, entry.offset);
+			
+			//unowned because we want a R/O pointer to it
+			unowned uint8[] buf = (uint8[])(data + entry.offset);
+			buf.length = (int)entry.length;
+			return buf;
+		}
+	}
+	
+	public class BigLoader {
+		private HashMap<string, BigFile?> bigHandles = new HashMap<string, BigFile?>();
+	
+		public BigLoader(){
+		}
+		
+		~BigLoader(){
+		}
+
+		public unowned uint8[]? getFile(string path){
+			foreach(BigFile b in bigHandles.values){
+				unowned uint8[]? buf = b.getFile(path);
+				if(buf != null)
+					return buf;
+			}
+			return null;
+		}
+
+		public bool load(string path){
+			if(bigHandles.has_key(path))
+				return true;
+
+			BigFile bigFile = new BigFile(path);
+			if(!bigFile.load())
+				return false;
+
+			bigHandles.set(path, bigFile);
 			return true;
 		}
 	}

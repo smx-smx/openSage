@@ -123,7 +123,7 @@ public class ModelRenderer {
 			angle = 0.0f;
 
 		foreach(MeshRenderer mr in mrs){		
-			Vec3 eye = Vec3.from_data (50.0f, 0.0f, 24.0f);
+			Vec3 eye = Vec3.from_data (100.0f, 0.0f, 24.0f);
 			Vec3 center = Vec3.from_data (0.0f, 0.0f, 0.0f);
 			Vec3 up = Vec3.from_data (0.0f, 0.0f, 1.0f);
 			
@@ -182,8 +182,8 @@ public class ModelRenderer {
 
 		try {
 			viewer = new GLProgram(
-				EngineSettings.RootDir + "/shaders/w3d_view.vert",
-				EngineSettings.RootDir + "/shaders/w3d_view.frag"
+				Engine.Settings.RootDir + "/shaders/w3d_view.vert",
+				Engine.Settings.RootDir + "/shaders/w3d_view.frag"
 			);
 		} catch(CoreError err){
 			stderr.printf("OpenGL program creation failed\n");
@@ -198,24 +198,17 @@ public class ModelRenderer {
 		camera = new Camera();
 		camera.set_perspective_projection (
 			60f,
-			(GLfloat) EngineSettings.ScreenWidth / (GLfloat) EngineSettings.ScreenHeight,
+			(GLfloat) Engine.Settings.ScreenWidth / (GLfloat) Engine.Settings.ScreenHeight,
 			0.1f,
-			100.0f
+			200.0f
 		);
 
 
-		ImageLoader ildr = new ImageLoader();
-		if(!ildr.load(EngineSettings.RootDir + "/avpaladin.dds")){
-			stderr.printf("Texture load failed\n");
-			return;
-		}
-		ValaGL.Core.Texture texture = ildr.get_frame();
 		//Init mesh renderers
 		uint nMeshes = model.meshes.length();
 		mrs = new MeshRenderer[nMeshes];
 		for(uint i=0; i<nMeshes; i++){
 			mrs[i] = new MeshRenderer(viewer, model.meshes.nth_data(i));
-			mrs[i].texture = texture;
 			get_pivot_idx(mrs[i]);
 		}
 

@@ -63,7 +63,8 @@ public class MeshRenderer {
 		mesh_ibo.make_current();
 	
 		glActiveTexture(GL_TEXTURE0);
-		texture.make_current();
+		if(texture != null)
+			texture.make_current();
 		glUniform1i((GLint)viewer.uniforms["diffuse"], 0);
 
 		// Then render their contents
@@ -92,10 +93,44 @@ public class MeshRenderer {
 		#endif
 
 		
+		bool has_texcoords = 
+			mesh.material_pass.texture_stage != null &&
+			mesh.material_pass.texture_stage.texcoords != null;
+
+		if(has_texcoords){
+			string textureName = mesh.textures.texture.texture_name.down();
+			int ext_pos = textureName.last_index_of_char('.');
+			if(ext_pos > -1){
+				textureName = textureName.splice(ext_pos, textureName.length);
+			}
+
+			unowned uint8[]? textureBuf = null;
+			string[] extensions = {"dds", "tga"};
+			foreach(string ext in extensions){
+				StringBuilder sb = new StringBuilder();
+				sb.append_printf("art/textures/%s.%s", textureName, ext);
+
+				textureBuf = Engine.BigLoader.getFile(sb.str);
+				stdout.printf(" -- %s Texture -- %s\n", object_name, textureName);
+
+				if(textureBuf != null)
+					break;
+			}
+
+			if(textureBuf == null){
+				stderr.printf("Failed to load texture\n");
+				throw new SageError.GENERIC("Failed to load texture\n");
+			}
+			texture = ImageLoader.LoadStream(textureBuf);
+		}
+
 		for(uint i=0; i<mesh.header.NumVertices; i++){
 			items[i].position = mesh.vertices[i];
 			items[i].normal = mesh.vertices_normals[i];
-			items[i].texcoords = mesh.material_pass.texture_stage.texcoords[i];
+			if(has_texcoords)
+				items[i].texcoords = mesh.material_pass.texture_stage.texcoords[i];
+			else
+				items[i].texcoords = {0.0f, 0.0f};
 		}
 
 		try {
