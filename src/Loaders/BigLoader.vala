@@ -1,5 +1,4 @@
 using Gee;
-using MFile;
 using Builtins;
 
 using OpenSage;
@@ -53,20 +52,21 @@ namespace OpenSage.Loaders {
 	}
 
 	public class BigFile {
-		private MFILE mf;
+		private MappedFile mf;
+		private string path;
 
 		private HashMap<string, BigEntry?> files = new HashMap<string, BigEntry?> ();
 		
 		public bool load(){		
-			uint8* data = mf.data();
+			uint8* data = mf.get_contents();
 			if(data == null){
-				stderr.printf("Failed to open BIG file '%s'\n", mf.path());
+				stderr.printf("Failed to open BIG file '%s'\n", path);
 				return false;
 			}
 			
 			BigHeader? hdr = BigHeader.import((BigHeader *)data);
 			if(hdr == null){
-				stdout.printf("'%s' is not a valid BIG file\n", mf.path());
+				stdout.printf("'%s' is not a valid BIG file\n", path);
 				return false;
 			}
 							
@@ -93,7 +93,8 @@ namespace OpenSage.Loaders {
 		}
 
 		public BigFile(string path){
-			mf = MFILE.open(path, Posix.O_RDONLY);
+			this.path = path;
+			this.mf = new MappedFile(path, false);
 		}
 	
 		/*
@@ -107,7 +108,7 @@ namespace OpenSage.Loaders {
 
 			BigEntry entry = files[name];
 			
-			uint8* data = mf.data();
+			uint8* data = mf.get_contents();
 			
 			stdout.printf("Big: Reading %u bytes at @%x\n", entry.length, entry.offset);
 			
