@@ -173,10 +173,21 @@ public class ModelRenderer {
 		}
 	}
 
+	private int getMaxTextures(){
+		GLint values[1] = {0};
+		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, values);
+		return values[0];
+	}
+
 	private void init_renderer(){
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 	
+
+		int max_textures = getMaxTextures();
+		stdout.printf("MAX TEXTURES: %u\n", max_textures);
+		assert(max_textures >= 32);
+
 		//WireFrame mode
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -193,7 +204,8 @@ public class ModelRenderer {
 		viewer.make_current();
 		viewer.add_uniform("t");
 		viewer.add_uniform("mvp");
-		viewer.add_uniform("diffuse");
+		viewer.add_uniform("texture");
+		viewer.add_uniform("has_texture");
 
 		camera = new Camera();
 		camera.set_perspective_projection (

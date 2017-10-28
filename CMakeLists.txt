@@ -49,6 +49,7 @@ message(STATUS "Found VAPIs: ${VAPI_LIST}")
 
 set(valac_flags
 	-D W3D_DEBUG
+	#-D PROFILE
 )
 
 if(MINGW)

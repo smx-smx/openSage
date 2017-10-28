@@ -128,14 +128,17 @@ namespace OpenSage {
 				stderr.printf("Failed to load BIG file\n");
 			}
 
-			unowned uint8[]? data = Engine.BigLoader.getFile("art/w3d/avpaladin.w3d");
+			/*unowned uint8[]? data = Engine.BigLoader.getFile("art/w3d/abbtcmdhq.w3d");
 			if(data == null){
 				stderr.printf("Cannot load model data\n");
 				return;
-			}
+			}*/
+			
+			//MappedFile model = new MappedFile(Engine.Settings.RootDir + "/ABBtCmdHQ.W3D", false);
 			//model = MFILE.open(EngineSettings.RootDir + "/avPaladin.W3D", Posix.O_RDONLY);
 			//model = MFILE.open(EngineSettings.RootDir + "/12ABLT.W3D", Posix.O_RDONLY);
-			//uint8* data = model.data();
+
+			//uint8 *data = model.get_contents();
 
 			unowned uint8[] buf = (uint8[])data;
 			//buf.length = (int)model.size();

@@ -1,10 +1,11 @@
 using OpenSage.Support;
 using Vapi.W3D.Chunk;
+using Gee;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TexturesVisitor : ChunkVisitor {
 
-		public TextureVisitor texture;
+		public ArrayList<TextureVisitor?> textures = new ArrayList<TextureVisitor?>();
 
 		public TexturesVisitor(StreamCursor cursor){
 			base(cursor);
@@ -24,7 +25,8 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 			switch(hdr.ChunkType){
 				case ChunkType.TEXTURE:
 					stdout.printf("[TEXTURES] => Texture\n");
-					texture = new TextureVisitor(cursor);
+					TextureVisitor texture = new TextureVisitor(cursor);
+					textures.add(texture);
 					return texture.run();
 			}
 			return VisitorResult.UNKNOWN_DATA;

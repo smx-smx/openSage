@@ -25,7 +25,7 @@ namespace OpenSage.Resources.W3D {
 		public VisitorResult run(){
 			VisitorResult result = VisitorResult.UNKNOWN_DATA;
 			while(true){
-				ChunkHeader hdr = *(ChunkHeader *)(cursor.ptr);
+				ChunkHeader hdr = ChunkHeader.import((Vapi.W3D.Chunk.ChunkHeader *)(cursor.ptr));
 				if(!validator(hdr.ChunkType)){
 					/* 
 					 * This is an unknown tag, but it's only problematic if we're in root
@@ -45,7 +45,7 @@ namespace OpenSage.Resources.W3D {
 					break;
 				}
 
-				cursor.skip((long)sizeof(ChunkHeader));
+				cursor.skip((long)sizeof(Vapi.W3D.Chunk.ChunkHeader));
 
 				ulong pre_offset = cursor.position;
 				result = visitor(hdr, cursor);
@@ -72,7 +72,8 @@ namespace OpenSage.Resources.W3D {
 
 				if(break_loop)
 					break;
-					
+				
+				stdout.printf("HasSubChunks: %s\n", hdr.HasSubChunks.to_string());
 				stdout.printf("Visitor: pre: %lu, post: %lu\n", pre_offset, cursor.position);
 				ulong distance = cursor.position - pre_offset;
 				

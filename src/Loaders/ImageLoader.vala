@@ -76,7 +76,7 @@ namespace OpenSage.Loaders {
 			);
 
 			ValaGL.Core.Texture texture = new ValaGL.Core.Texture();
-			texture.make_current(GL_TEXTURE_2D);
+			texture.make_current(0, GL_TEXTURE_2D);
 
 			glTexImage2D(
 				GL_TEXTURE_2D,

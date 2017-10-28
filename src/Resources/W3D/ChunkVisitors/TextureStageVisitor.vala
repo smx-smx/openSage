@@ -3,6 +3,7 @@ using Vapi.W3D.Chunk;
 
 namespace OpenSage.Resources.W3D.ChunkVisitors {
 	public class TextureStageVisitor : ChunkVisitor {
+		public unowned int32[] ids;
 		public unowned TextureCoordinates[] texcoords;
 
 		public TextureStageVisitor(StreamCursor cursor){
@@ -24,6 +25,9 @@ namespace OpenSage.Resources.W3D.ChunkVisitors {
 			switch(hdr.ChunkType){
 				case ChunkType.TEXTURE_IDS:
 					stdout.printf("[TEXTURE_STAGE] => Texture IDs\n");
+					ids = (int32[])(cursor.ptr);
+					ids.length = (int)(hdr.ChunkSize / sizeof(int32));
+					cursor.skip(ids.length * (long)sizeof(int32));
 					return VisitorResult.OK;
 				case ChunkType.STAGE_TEXCOORDS:
 					stdout.printf("[TEXTURE_STAGE] => Stage TexCoords\n");
