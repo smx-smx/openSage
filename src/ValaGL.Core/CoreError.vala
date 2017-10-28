@@ -50,7 +50,15 @@ public errordomain CoreError {
     /**
 	 * Indicates a frame buffer object initialization error.
 	 */
-    FBO_INIT
+    FBO_INIT,
+    /**
+     * Indicates a uniform buffer object initialization error.
+     */
+    UBO_INIT,
+    /**
+     * Indicates a shader storage buffer object initialization error.
+     */
+    SSBO_INIT
 }
 
 }

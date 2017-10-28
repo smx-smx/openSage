@@ -15,7 +15,8 @@ public class Texture : Object {
 		}
 	}
 
-	public void make_current(int type = GL_TEXTURE_2D){
+	public void make_current(int textureUnit = 0, int type = GL_TEXTURE_2D){
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
 		glBindTexture(type, id);
 	}
 
