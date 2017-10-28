@@ -709,22 +709,9 @@ namespace OpenSage.Tools.IniParser {
 			}
 		}
 
-		private static void parseIni(string iniPath){
-			#if PROFILE
-			Posix.timeval pre = {};
-			Posix.timeval post = {};
-			pre.get_time_of_day();
-			#endif
-			
+		private static void parseIni(string iniPath){			
 			Parser p = Parser.from_file(iniPath);
 			p.parse();
-			
-			#if PROFILE
-			post.get_time_of_day();
-			ulong micros_pre = 1000000 * pre.tv_sec + pre.tv_usec;
-			ulong micros_post = 1000000 * post.tv_sec + post.tv_usec;
-			stdout.printf("=> Parsed %s\n  %llu microseconds\n", iniPath, (micros_post - micros_pre));
-			#endif
 		}
 
 		public Program(string[] args){
@@ -756,7 +743,21 @@ namespace OpenSage.Tools.IniParser {
 					return 1;
 				}
 
+				#if PROFILE
+				Posix.timeval pre = {};
+				Posix.timeval post = {};
+				pre.get_time_of_day();
+				#endif
+
 				recurse_dir(dir, null, parseIni);
+				ThreadPool.free((owned)pool, false, true);
+				
+				#if PROFILE
+				post.get_time_of_day();
+				ulong micros_pre = 1000000 * pre.tv_sec + pre.tv_usec;
+				ulong micros_post = 1000000 * post.tv_sec + post.tv_usec;
+				stdout.printf("=> Parsed in %llu microseconds\n", (micros_post - micros_pre));
+				#endif
 			}
 
 			return 0;

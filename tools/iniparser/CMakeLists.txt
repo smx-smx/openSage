@@ -10,6 +10,7 @@ OPTIONS
     --disable-warnings
     --thread
     #-g
+    ${valac_flags}
 CUSTOM_VAPIS
     ${VAPI_LIST}
 GENERATE_VAPI
