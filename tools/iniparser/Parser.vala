@@ -13,7 +13,7 @@ namespace OpenSage.Tools.IniParser {
 		public const char ASSIGNMENT = '=';
 	}
 
-	[SimpleType, IntegerType, CCode(has_type_id = "false")]
+	[SimpleType, IntegerType, CCode(has_type_id = false)]
 	public struct Percentage {
 	}
 
