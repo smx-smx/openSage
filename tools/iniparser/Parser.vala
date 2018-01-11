@@ -1,4 +1,3 @@
-using MFile;
 using Gee;
 
 namespace OpenSage.Tools.IniParser {
@@ -123,10 +122,8 @@ namespace OpenSage.Tools.IniParser {
 	}
 
 	public class IniFile {
-		// This is technically owned,
-		// but we want to save having to copy the struct
-		// we will close the file manually in the destructor
-		public unowned MFILE mf;
+		private string path;
+		public MappedFile mf;
 		public MemString data;
 		private int data_length;
 
@@ -139,17 +136,21 @@ namespace OpenSage.Tools.IniParser {
 		public Parser parser;
 
 		public IniFile(
-			MFILE *mfile,
+			string path,
 			Parser parser
 		){
-			this.parser = parser;
-			this.mf = mfile;
+			MappedFile mf = new MappedFile(path, false);
 
+			this.parser = parser;
+			this.path = path;
+			this.mf = mf;
+
+			int size = (int)mf.get_length();
 			this.data = {
-				(char *)mf.data(),
-				(int)mf.size()
+				mf.get_contents(),
+				size
 			};
-			this.data_length = (int)mf.size();
+			this.data_length = size;
 
 			/*unowned uint8[] buf = (uint8[])mf->data();
 			buf.length = (int)mf->size();
@@ -157,11 +158,7 @@ namespace OpenSage.Tools.IniParser {
 			this.data = (string)buf;
 			this.data_length = buf.length;*/
 
-			this.basedir = Path.get_dirname(mf.path());
-		}
-
-		~IniFile(){
-			mf.close();
+			this.basedir = Path.get_dirname(path);
 		}
 
 		public MemString readLine(){
@@ -607,13 +604,11 @@ namespace OpenSage.Tools.IniParser {
 		private ArrayQueue<IniFile*> files = new ArrayQueue<IniFile*>();
 
 		public static Parser from_file(string path){
-			MFILE *mf = MFILE.open(path, Posix.O_RDONLY);
-			return new Parser(mf);
+			return new Parser(path);
 		}
 
 		public void load_file(string path){
-			MFILE *mf = MFILE.open(path, Posix.O_RDONLY);
-			IniFile *f = new IniFile(mf, this);
+			IniFile *f = new IniFile(path, this);
 			files.offer(f);
 		}
 
@@ -623,13 +618,13 @@ namespace OpenSage.Tools.IniParser {
 		private IniObject* curObject = null;
 		public HashMap<MemString?, IniObject*> objects = new HashMap<MemString?, IniObject*>();
 
-		public Parser(MFILE mf){
+		public Parser(string iniPath){
 			/*
 			 * IniFile receives a copy of this parser, so that it can 
 			 * access the symbols and add files to be parsed (like included files)
-		 	 */
+			  */
 			IniFile *f = new IniFile(
-				mf,
+				iniPath,
 				this
 			);
 			files.offer(f);
