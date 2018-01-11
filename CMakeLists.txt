@@ -10,14 +10,19 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
 	set(CMAKE_BUILD_TYPE "Debug")
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
+set(valac_flags
+	-D W3D_DEBUG
+	#-D PROFILE
+)
+
+# Include user specific configuration if it exists (mainly used for VALA_EXECUTABLE)
+if(EXISTS "${CMAKE_SOURCE_DIR}/valac.cmake")
+    message(STATUS "Loading user overrides from valac.cmake")
+    include("${CMAKE_SOURCE_DIR}/valac.cmake")
+endif()
+
 include(FindVala)
 include(UseVala)
-
-## Temporarly use in-tree build of vala
-#set(VALA_EXECUTABLE ${CMAKE_SOURCE_DIR}/vala/build/compiler/valac${CMAKE_EXECUTABLE_SUFFIX})
-#set(VALA_FLAGS
-#    --vapidir ${CMAKE_SOURCE_DIR}/vala/vapi
-#)
 
 find_package(Vala REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -46,11 +51,6 @@ file(GLOB_RECURSE VAPI_LIST "${CMAKE_SOURCE_DIR}" "vapi/*.vapi")
 
 message(STATUS "Found Sources: ${source_list}")
 message(STATUS "Found VAPIs: ${VAPI_LIST}")
-
-set(valac_flags
-	-D W3D_DEBUG
-	#-D PROFILE
-)
 
 if(MINGW)
 	list(APPEND valac_flags -D MINGW)

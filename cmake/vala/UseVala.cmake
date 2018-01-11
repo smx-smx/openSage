@@ -110,8 +110,8 @@
 include(CMakeParseArguments)
 
 function(vala_precompile output)
-    cmake_parse_arguments(ARGS "" "DIRECTORY;GENERATE_HEADER;GENERATE_VAPI"
-        "SOURCES;PACKAGES;OPTIONS;DEFINITIONS;CUSTOM_VAPIS" ${ARGN})
+    cmake_parse_arguments(ARGS "LAUNCH_DEBUGGER" "TOOLCHAIN;DIRECTORY;GENERATE_HEADER;GENERATE_VAPI"
+        "SOURCES;PACKAGES;OPTIONS;DEFINITIONS;CUSTOM_VAPIS;VAPI_DIRS" ${ARGN})
 
     if(ARGS_DIRECTORY)
 		get_filename_component(DIRECTORY ${ARGS_DIRECTORY} ABSOLUTE)
@@ -151,6 +151,18 @@ function(vala_precompile output)
         endforeach(vapi ${ARGS_CUSTOM_VAPIS})
     endif(ARGS_CUSTOM_VAPIS)
 
+    set(vapi_dirs_arguments "")
+    if(ARGS_VAPI_DIRS)
+        foreach(vapidir ${ARGS_VAPI_DIRS})
+            list(APPEND vapi_dirs_arguments --vapidir=${vapidir})
+        endforeach(vapidir ${ARGS_VAPI_DIRS})
+    endif(ARGS_VAPI_DIRS)
+
+    set(vala_launch_debugger "")
+    if(ARGS_LAUNCH_DEBUGGER)
+        set(vala_launch_debugger "--valac-debug")
+    endif(ARGS_LAUNCH_DEBUGGER)
+
     set(vapi_arguments "")
     if(ARGS_GENERATE_VAPI)
         list(APPEND out_files "${DIRECTORY}/${ARGS_GENERATE_VAPI}.vapi")
@@ -170,19 +182,27 @@ function(vala_precompile output)
         list(APPEND header_arguments "--internal-header=${DIRECTORY}/${ARGS_GENERATE_HEADER}_internal.h")
     endif(ARGS_GENERATE_HEADER)
 
+    set(toolchain_argument "")
+    if(ARGS_TOOLCHAIN)
+        set(toolchain_argument --path="${ARGS_TOOLCHAIN}")
+    endif(ARGS_TOOLCHAIN)
+
     add_custom_command(OUTPUT ${out_files} 
     COMMAND 
         ${VALA_EXECUTABLE} 
     ARGS 
+        ${vala_launch_debugger}
+        ${toolchain_argument}
         "-C" 
         ${header_arguments} 
+        ${vapi_dirs_arguments}
         ${vapi_arguments}
         "-b" ${CMAKE_CURRENT_SOURCE_DIR} 
         "-d" ${DIRECTORY} 
         ${vala_pkg_opts} 
         ${vala_define_opts}
         ${ARGS_OPTIONS} 
-        ${in_files} 
+        ${in_files}
         ${custom_vapi_arguments}
     DEPENDS 
         ${in_files} 
